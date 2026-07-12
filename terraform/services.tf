@@ -8,7 +8,8 @@ resource "google_project_service" "compute_services" {
     "workflows.googleapis.com",
     "cloudscheduler.googleapis.com",
     "cloudbuild.googleapis.com",
-    "dataform.googleapis.com"
+    "dataform.googleapis.com",
+    "artifactregistry.googleapis.com"
   ])
   project            = var.compute_project_id
   service            = each.key

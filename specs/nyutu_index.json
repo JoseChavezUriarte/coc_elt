@@ -66,5 +66,13 @@
   "5a080895-9b68-4d75-9362-9925099cfe56": {
     "title": "Resolve Cloud Build trigger 400 / service account error by using coc-elt-runner service account Walkthrough",
     "source": "specs/coc_elt_20260712_resolve_cloudbuild_sa_error_walkthrough.md"
+  },
+  "9ddf92eb-b617-445d-b3b2-041e80634aa0": {
+    "title": "Provision Backing Artifact Registry Repository for GCR Implementation Plan",
+    "source": "specs/coc-elt_20260712_provision-gcr-artifact-registry_implementation_plan.md"
+  },
+  "ca2d9a93-ddf9-4108-bcc9-118864ea3991": {
+    "title": "Provision Backing Artifact Registry Repository for GCR Walkthrough",
+    "source": "specs/coc-elt_20260712_provision-gcr-artifact-registry_walkthrough.md"
   }
 }

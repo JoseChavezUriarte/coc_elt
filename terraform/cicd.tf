@@ -57,3 +57,13 @@ resource "google_secret_manager_secret_iam_member" "cloudbuild_secret_accessor" 
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:service-${data.google_project.compute_project.number}@gcp-sa-cloudbuild.iam.gserviceaccount.com"
 }
+
+resource "google_artifact_registry_repository" "gcr_repo" {
+  project       = var.compute_project_id
+  location      = "us"
+  repository_id = "gcr.io"
+  description   = "GCR compatibility repository for Clash of Clans pipeline"
+  format        = "DOCKER"
+
+  depends_on = [google_project_service.compute_services]
+}
