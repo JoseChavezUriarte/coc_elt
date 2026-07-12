@@ -87,12 +87,12 @@ We will define a multi-project setup within the Terraform codebase. Providers wi
   - `google_secret_manager_secret_iam_member.accessor`: Grants access of the secret to `elt_runner` (Resource level).
   - `google_project_iam_member.bq_job_user`: Grants `roles/bigquery.jobUser` on the Data Project to `elt_runner`.
   - `google_bigquery_dataset_iam_member.bq_data_editor`: Grants `roles/bigquery.dataEditor` on the target datasets in the Data Project (Dataset level).
-  - `google_workflows_workflow_iam_member.workflows_invoker`: Grants `roles/workflows.invoker` strictly on the workflow.
+  - `google_project_iam_member.workflows_invoker`: Grants `roles/workflows.invoker` on the Compute Project (Project level, due to provider limitations).
   - `google_cloud_run_v2_job_iam_member.run_developer`: Grants `roles/run.developer` strictly on the Cloud Run job.
   - `google_service_account_iam_member.sa_user_self`: Grants `roles/iam.serviceAccountUser` strictly on itself.
-  - `google_dataform_repository_iam_member.dataform_editor`: Grants `roles/dataform.editor` strictly on the `coc-elt` Dataform repository.
+  - `google_project_iam_member.dataform_editor`: Grants `roles/dataform.editor` on the Data Project (Project level, due to provider limitations).
 - **`terraform/bigquery.tf`**:
-  - `google_bigquery_dataset.bronze`: Dataset `coc_bronze` located in `us-east1` in the Data Project.
+  - `google_bigquery_dataset.bronze`: Dataset `coc_bronze` located in `us-central1` in the Data Project.
   - `google_bigquery_table.tables`: Defines individual Bronze tables with daily partitioning configurations on `extracted_at`.
 - **`terraform/compute.tf`**:
   - `google_cloud_run_v2_job.elt_job`: Configured with Direct VPC Egress pointing to the private subnet and VPC network, routing `ALL_TRAFFIC` to egress through the NAT Gateway.

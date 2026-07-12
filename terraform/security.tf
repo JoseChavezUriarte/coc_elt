@@ -29,12 +29,10 @@ resource "google_bigquery_dataset_iam_member" "bq_data_editor" {
   member     = "serviceAccount:${google_service_account.elt_runner.email}"
 }
 
-resource "google_workflows_workflow_iam_member" "workflows_invoker" {
-  project      = var.compute_project_id
-  region       = var.region
-  name         = "coc-elt-workflow"
-  role         = "roles/workflows.invoker"
-  member       = "serviceAccount:${google_service_account.elt_runner.email}"
+resource "google_project_iam_member" "workflows_invoker" {
+  project = var.compute_project_id
+  role    = "roles/workflows.invoker"
+  member  = "serviceAccount:${google_service_account.elt_runner.email}"
 }
 
 resource "google_cloud_run_v2_job_iam_member" "run_developer" {
@@ -51,10 +49,8 @@ resource "google_service_account_iam_member" "sa_user_self" {
   member             = "serviceAccount:${google_service_account.elt_runner.email}"
 }
 
-resource "google_dataform_repository_iam_member" "dataform_editor" {
-  project    = var.data_project_id
-  region     = var.region
-  repository = "coc-elt"
-  role       = "roles/dataform.editor"
-  member     = "serviceAccount:${google_service_account.elt_runner.email}"
+resource "google_project_iam_member" "dataform_editor" {
+  project = var.data_project_id
+  role    = "roles/dataform.editor"
+  member  = "serviceAccount:${google_service_account.elt_runner.email}"
 }
