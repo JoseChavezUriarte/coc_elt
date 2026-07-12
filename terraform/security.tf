@@ -82,3 +82,23 @@ resource "google_project_iam_member" "dataform_editor" {
 
   depends_on = [google_project_service.compute_services]
 }
+
+data "google_project" "compute_project" {
+  project_id = var.compute_project_id
+}
+
+resource "google_project_iam_member" "cloudbuild_run_developer" {
+  project = var.compute_project_id
+  role    = "roles/run.developer"
+  member  = "serviceAccount:${data.google_project.compute_project.number}@cloudbuild.gserviceaccount.com"
+
+  depends_on = [google_project_service.compute_services]
+}
+
+resource "google_service_account_iam_member" "cloudbuild_sa_user" {
+  service_account_id = google_service_account.elt_runner.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${data.google_project.compute_project.number}@cloudbuild.gserviceaccount.com"
+
+  depends_on = [google_project_service.compute_services]
+}

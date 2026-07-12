@@ -35,3 +35,10 @@ resource "google_bigquery_table" "tables" {
     }
   ])
 }
+
+resource "google_dataform_repository" "coc_elt" {
+  provider = google-beta
+  project  = var.data_project_id
+  region   = var.region
+  name     = "coc-elt"
+}

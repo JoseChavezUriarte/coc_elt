@@ -34,5 +34,13 @@
   "947bd6e1-0bda-49e8-952b-6c85b89ad755": {
     "title": "Extract Cloud Workflows into External Template File Walkthrough",
     "source": "specs/coc-elt_20260712_extract-workflow-template_walkthrough.md"
+  },
+  "4e0df36a-88d8-460b-a60b-549ad04fadc4": {
+    "title": "Provision Remaining Terraform Resources for CI/CD and Dataform Implementation Plan",
+    "source": "specs/coc-elt_20260712_provision-remaining-resources_implementation_plan.md"
+  },
+  "1877c328-74f6-4c00-a783-d17efe6e2e9a": {
+    "title": "Provision Remaining Terraform Resources for CI/CD and Dataform Walkthrough",
+    "source": "specs/coc-elt_20260712_provision-remaining-resources_walkthrough.md"
   }
 }

@@ -19,3 +19,13 @@ variable "clan_tag" {
   type        = string
   description = "The Clash of Clans clan tag."
 }
+
+variable "github_app_installation_id" {
+  type        = number
+  description = "The GitHub App Installation ID for Cloud Build."
+}
+
+variable "github_repository_url" {
+  type        = string
+  description = "The URL of the GitHub repository."
+}
