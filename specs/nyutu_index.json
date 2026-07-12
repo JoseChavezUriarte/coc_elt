@@ -1,0 +1,22 @@
+{
+  "7d8a0c00-8ef4-43f6-8b9e-bc9853bb2643": {
+    "title": "System Context: Original Dokploy-Based Pipeline Architecture",
+    "source": "specs/system_context_original_pipeline.md"
+  },
+  "850f0c0d-7db6-41a6-9c8c-3aac25eeca62": {
+    "title": "ETL Pipeline: Data Fetching and Ingestion Constraints",
+    "source": "specs/etl_pipeline_fetching_and_ingestion.md"
+  },
+  "8974b300-5884-4413-9403-66d094314bc7": {
+    "title": "Business Logic: Dashboard Analytical Requirements",
+    "source": "specs/analytical_requirements_and_queries.md"
+  },
+  "6ec367aa-4ae6-422a-96e9-997dbcd90641": {
+    "title": "Cross-Project ELT Pipeline Implementation Plan",
+    "source": "specs/coc-elt_20260711_cross-project-elt-pipeline_implementation_plan.md"
+  },
+  "81a47ae0-074b-4530-b1e6-2a3f78c934d0": {
+    "title": "Cross-Project ELT Pipeline Implementation Walkthrough",
+    "source": "specs/coc-elt_20260711_cross-project-elt-pipeline_walkthrough.md"
+  }
+}

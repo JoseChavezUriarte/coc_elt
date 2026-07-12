@@ -1,0 +1,6 @@
+{
+  "defaultProject": "coc-data-analytics-project",
+  "defaultDataset": "coc_silver",
+  "defaultLocation": "us-east1",
+  "assertionDataset": "coc_assertions"
+}
