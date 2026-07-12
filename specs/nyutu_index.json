@@ -82,6 +82,14 @@
   "969b3b33-7c98-4aeb-aef2-7a0cfce68202": {
     "title": "Configure Dynamic Parameterization for Developer IAM Roles Walkthrough",
     "source": "specs/coc-elt_20260712_parameterize-developer-iam-roles_walkthrough.md"
+  },
+  "6f948373-63af-4163-9f04-37957b2af500": {
+    "title": "Provision Dedicated Service Account for Dataform with Eventual Consistency Mitigation (Revised) Implementation Plan",
+    "source": "specs/coc_elt_20260712_revised_dataform_runner_sa_implementation_plan.md"
+  },
+  "20790b99-a316-43b9-bb80-c11df5d4b31a": {
+    "title": "Provision Dedicated Service Account for Dataform with Eventual Consistency Mitigation Walkthrough",
+    "source": "specs/coc_elt_20260712_revised_dataform_runner_sa_walkthrough.md"
   }
 }
 

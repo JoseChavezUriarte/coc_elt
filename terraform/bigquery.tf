@@ -41,12 +41,10 @@ resource "google_dataform_repository" "coc_elt" {
   project         = var.data_project_id
   region          = var.region
   name            = "coc-elt"
-  service_account = google_service_account.elt_runner.email
+  service_account = google_service_account.dataform_runner.email
 
   depends_on = [
-    google_service_account_iam_member.dataform_sa_user,
-    google_service_account_iam_member.dataform_sa_token_creator,
-    google_service_account_iam_member.developer_sa_user,
+    time_sleep.wait_for_dataform_iam
   ]
 }
 

@@ -139,28 +139,56 @@ data "google_project" "data_project" {
   project_id = var.data_project_id
 }
 
-resource "google_service_account_iam_member" "dataform_sa_user" {
-  service_account_id = google_service_account.elt_runner.name
-  role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:service-${data.google_project.data_project.number}@gcp-sa-dataform.iam.gserviceaccount.com"
-
-  depends_on = [google_project_service.compute_services]
+resource "google_service_account" "dataform_runner" {
+  account_id   = "coc-dataform-runner"
+  display_name = "Clash of Clans Dataform Runner SA"
+  project      = var.data_project_id
 }
 
-resource "google_service_account_iam_member" "dataform_sa_token_creator" {
-  service_account_id = google_service_account.elt_runner.name
+# NOTE: Granting roles/bigquery.dataEditor at the project level is considered technical debt.
+# It MUST be refactored to google_bigquery_dataset_iam_member at the dataset level in a future iteration
+# once dataset boundaries are fully codified.
+resource "google_project_iam_member" "dataform_runner_bq_data_editor" {
+  project = var.data_project_id
+  role    = "roles/bigquery.dataEditor"
+  member  = "serviceAccount:${google_service_account.dataform_runner.email}"
+}
+
+resource "google_project_iam_member" "dataform_runner_bq_job_user" {
+  project = var.data_project_id
+  role    = "roles/bigquery.jobUser"
+  member  = "serviceAccount:${google_service_account.dataform_runner.email}"
+}
+
+resource "google_service_account_iam_member" "dataform_runner_sa_user" {
+  service_account_id = google_service_account.dataform_runner.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:service-${data.google_project.data_project.number}@gcp-sa-dataform.iam.gserviceaccount.com"
+}
+
+resource "google_service_account_iam_member" "dataform_runner_sa_token_creator" {
+  service_account_id = google_service_account.dataform_runner.name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = "serviceAccount:service-${data.google_project.data_project.number}@gcp-sa-dataform.iam.gserviceaccount.com"
-
-  depends_on = [google_project_service.compute_services]
 }
 
 resource "google_service_account_iam_member" "developer_sa_user" {
   for_each           = var.dataform_developer_emails
-  service_account_id = google_service_account.elt_runner.name
+  service_account_id = google_service_account.dataform_runner.name
   role               = "roles/iam.serviceAccountUser"
   member             = "user:${each.value}"
 }
+
+resource "time_sleep" "wait_for_dataform_iam" {
+  create_duration = "60s"
+
+  depends_on = [
+    google_service_account_iam_member.dataform_runner_sa_user,
+    google_service_account_iam_member.dataform_runner_sa_token_creator,
+    google_service_account_iam_member.developer_sa_user
+  ]
+}
+
 
 
 
