@@ -19,8 +19,3 @@ variable "clan_tag" {
   type        = string
   description = "The Clash of Clans clan tag."
 }
-
-variable "state_bucket_name" {
-  type        = string
-  description = "The name of the GCS bucket to store Terraform state."
-}

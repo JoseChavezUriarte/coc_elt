@@ -1,5 +1,5 @@
 resource "google_storage_bucket" "tf_state" {
-  name          = var.state_bucket_name
+  name          = "tf-state-${var.compute_project_id}"
   project       = var.compute_project_id
   location      = var.region
   force_destroy = false
