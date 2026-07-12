@@ -74,5 +74,14 @@
   "ca2d9a93-ddf9-4108-bcc9-118864ea3991": {
     "title": "Provision Backing Artifact Registry Repository for GCR Walkthrough",
     "source": "specs/coc-elt_20260712_provision-gcr-artifact-registry_walkthrough.md"
+  },
+  "d62192a3-1aac-4889-912c-97b6bc69eed6": {
+    "title": "Configure Dynamic Parameterization for Developer IAM Roles Implementation Plan",
+    "source": "specs/coc-elt_20260712_parameterize-developer-iam-roles_implementation_plan.md"
+  },
+  "969b3b33-7c98-4aeb-aef2-7a0cfce68202": {
+    "title": "Configure Dynamic Parameterization for Developer IAM Roles Walkthrough",
+    "source": "specs/coc-elt_20260712_parameterize-developer-iam-roles_walkthrough.md"
   }
 }
+

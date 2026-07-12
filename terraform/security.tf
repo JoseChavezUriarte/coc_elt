@@ -155,5 +155,13 @@ resource "google_service_account_iam_member" "dataform_sa_token_creator" {
   depends_on = [google_project_service.compute_services]
 }
 
+resource "google_service_account_iam_member" "developer_sa_user" {
+  for_each           = var.dataform_developer_emails
+  service_account_id = google_service_account.elt_runner.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "user:${each.value}"
+}
+
+
 
 

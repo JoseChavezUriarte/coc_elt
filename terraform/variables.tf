@@ -29,3 +29,10 @@ variable "github_repository_url" {
   type        = string
   description = "The URL of the GitHub repository."
 }
+
+variable "dataform_developer_emails" {
+  type        = set(string)
+  description = "A set of developer email addresses to grant serviceAccountUser permissions on the runner service account."
+  default     = []
+}
+
