@@ -1,7 +1,7 @@
 ---
 title: "Resolve BigQuery Load Job Text Mode Error Walkthrough"
 project_id: "coc-elt"
-nyutu_uuid: "f804e1b8-1aed-4319-9ec1-33487195b2a6"
+nyutu_uuid: "42f069bc-2fd6-42ed-b4c3-96a851ebc36b"
 artifact_type: "Bug Fix Walkthrough"
 tags:
   - "bigquery"
