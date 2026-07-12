@@ -42,5 +42,9 @@
   "1877c328-74f6-4c00-a783-d17efe6e2e9a": {
     "title": "Provision Remaining Terraform Resources for CI/CD and Dataform Walkthrough",
     "source": "specs/coc-elt_20260712_provision-remaining-resources_walkthrough.md"
+  },
+  "1bb1e994-ea56-4c8f-b0b5-33cb0f580299": {
+    "title": "Import and Use Pre-existing Secret for GitHub Connection in Terraform",
+    "source": "specs/coc_elt_20260712_import_github_token_secret_implementation_plan.md"
   }
 }
