@@ -43,6 +43,8 @@ The following files were created or modified during the feature implementation:
   - `terraform/bigquery.tf`
   - `terraform/compute.tf`
   - `terraform/backend_bucket.tf`
+  - `terraform/services.tf`
+  - `specs/coc-elt_20260712_enable-gcp-apis_implementation_plan.md`
   - `src/coc_elt/config.py`
   - `src/coc_elt/api_client.py`
   - `src/coc_elt/bq_client.py`
