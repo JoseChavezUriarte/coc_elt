@@ -12,15 +12,10 @@ variable "data_project_id" {
 variable "region" {
   type        = string
   description = "The region to deploy the resources."
+  default     = "us-central1"
 }
 
 variable "clan_tag" {
   type        = string
   description = "The Clash of Clans clan tag."
-}
-
-variable "coc_api_key" {
-  type        = string
-  description = "The Clash of Clans API key."
-  sensitive   = true
 }

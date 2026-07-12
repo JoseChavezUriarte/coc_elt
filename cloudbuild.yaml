@@ -45,7 +45,7 @@ steps:
       - '--project=$PROJECT_ID'
 
 substitutions:
-  _REGION: 'us-east1'
+  _REGION: 'us-central1'
 
 options:
   logging: CLOUD_LOGGING_ONLY

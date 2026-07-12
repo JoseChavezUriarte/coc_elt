@@ -4,22 +4,14 @@ resource "google_service_account" "elt_runner" {
   project      = var.compute_project_id
 }
 
-resource "google_secret_manager_secret" "coc_api_key" {
-  secret_id = "coc-api-key"
+data "google_secret_manager_secret" "coc_api_key" {
+  secret_id = "COC_APIKEY"
   project   = var.compute_project_id
-  replication {
-    automatic = true
-  }
-}
-
-resource "google_secret_manager_secret_version" "coc_api_key_version" {
-  secret      = google_secret_manager_secret.coc_api_key.id
-  secret_data = var.coc_api_key
 }
 
 resource "google_secret_manager_secret_iam_member" "accessor" {
   project   = var.compute_project_id
-  secret_id = google_secret_manager_secret.coc_api_key.secret_id
+  secret_id = data.google_secret_manager_secret.coc_api_key.secret_id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.elt_runner.email}"
 }
