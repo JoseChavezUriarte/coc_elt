@@ -26,11 +26,13 @@ main:
             raise: $${op_status.error}
         next: run_dataform
     - run_dataform:
-        call: googleapis.dataform.v1beta1.projects.locations.repositories.workflowInvocations.create
+        call: http.post
         args:
-          parent: "projects/${data_project_id}/locations/${region}/repositories/coc-elt"
+          url: https://dataform.googleapis.com/v1beta1/projects/${data_project_id}/locations/${region}/repositories/coc-elt/workflowInvocations
+          auth:
+            type: OAuth2
           body:
-            compilationResult: "projects/${data_project_id}/locations/${region}/repositories/coc-elt/compilationResults/main"
+            compilationResult: projects/${data_project_id}/locations/${region}/repositories/coc-elt/compilationResults/main
         result: df_invocation
     - return_result:
-        return: $${df_invocation}
+        return: $${df_invocation.body}
