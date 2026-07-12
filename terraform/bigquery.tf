@@ -14,7 +14,7 @@ locals {
 resource "google_bigquery_table" "tables" {
   for_each   = toset(local.tables)
   dataset_id = google_bigquery_dataset.bronze.dataset_id
-  table_id   = each.key
+  table_id   = "coc_${each.key}"
   project    = var.data_project_id
 
   time_partitioning {

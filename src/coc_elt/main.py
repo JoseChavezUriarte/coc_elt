@@ -27,16 +27,16 @@ def run_pipeline() -> None:
     try:
         logger.info("Fetching clan details", extra={"step": "fetch_clan"})
         clan_data = api_client.fetch_clan()
-        ingester.ingest_record("clan", clan_data, now_utc)
+        ingester.ingest_record("coc_clan", clan_data, now_utc)
 
         logger.info("Fetching members details", extra={"step": "fetch_members"})
         members_data = api_client.fetch_members()
-        ingester.ingest_record("members", members_data, now_utc)
+        ingester.ingest_record("coc_members", members_data, now_utc)
 
         logger.info("Fetching current war details", extra={"step": "fetch_current_war"})
         war_data = api_client.fetch_current_war()
         if war_data is not None:
-            ingester.ingest_record("current_war", war_data, now_utc)
+            ingester.ingest_record("coc_current_war", war_data, now_utc)
         else:
             logger.info(
                 "Skipping Current War ingestion as clan is not in war.",
@@ -46,7 +46,7 @@ def run_pipeline() -> None:
         if is_capital_raid_day(now_utc):
             logger.info("Fetching capital raids details", extra={"step": "fetch_capital_raids"})
             raids_data = api_client.fetch_capital_raids()
-            ingester.ingest_record("capital_raids", raids_data, now_utc)
+            ingester.ingest_record("coc_capital_raids", raids_data, now_utc)
         else:
             logger.info(
                 "Skipping Capital Raids extraction (Tuesday/Wednesday/Thursday in UTC).",
@@ -68,9 +68,6 @@ def run_pipeline() -> None:
             }
         )
         raise e
-
-if __name__ == "__main__":
-    run_pipeline()
 
 if __name__ == "__main__":
     run_pipeline()

@@ -1,20 +1,20 @@
 declare({
   database: "coc-data-analytics-project",
   schema: "coc_bronze",
-  name: "clan"
+  name: "coc_clan"
 });
 declare({
   database: "coc-data-analytics-project",
   schema: "coc_bronze",
-  name: "members"
+  name: "coc_members"
 });
 declare({
   database: "coc-data-analytics-project",
   schema: "coc_bronze",
-  name: "current_war"
+  name: "coc_current_war"
 });
 declare({
   database: "coc-data-analytics-project",
   schema: "coc_bronze",
-  name: "capital_raids"
+  name: "coc_capital_raids"
 });

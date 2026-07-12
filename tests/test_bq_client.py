@@ -13,9 +13,9 @@ def test_ingest_record_timezone_localization(mock_bq_client_cls):
     
     naive_dt = datetime(2026, 7, 11, 12, 0, 0)
     payload = {"key": "val"}
-    ingester.ingest_record("clan", payload, naive_dt)
+    ingester.ingest_record("coc_clan", payload, naive_dt)
     
-    expected_table_id = "test-project.test_dataset.clan"
+    expected_table_id = "test-project.test_dataset.coc_clan"
     expected_row = {
         "extracted_at": "2026-07-11T12:00:00+00:00",
         "payload": payload
@@ -25,7 +25,7 @@ def test_ingest_record_timezone_localization(mock_bq_client_cls):
     from datetime import timedelta
     tz = timezone(timedelta(hours=2))
     aware_dt = datetime(2026, 7, 11, 14, 0, 0, tzinfo=tz)
-    ingester.ingest_record("clan", payload, aware_dt)
+    ingester.ingest_record("coc_clan", payload, aware_dt)
     
     mock_bq_client.insert_rows_json.assert_called_with(expected_table_id, [expected_row])
 
@@ -39,4 +39,4 @@ def test_ingest_record_insertion_error(mock_bq_client_cls):
     
     dt = datetime(2026, 7, 11, 12, 0, 0, tzinfo=timezone.utc)
     with pytest.raises(RuntimeError, match="BigQuery insertion failed"):
-        ingester.ingest_record("clan", {}, dt)
+        ingester.ingest_record("coc_clan", {}, dt)

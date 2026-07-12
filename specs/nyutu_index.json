@@ -22,5 +22,9 @@
   "cf6be15a-f181-438f-86b9-d029f967a87f": {
     "title": "Explicit Enablement of Google Cloud APIs in Terraform",
     "source": "specs/coc-elt_20260712_enable-gcp-apis_implementation_plan.md"
+  },
+  "ede11d59-74cd-4153-9660-8c064f55e721": {
+    "title": "Rename Bronze Tables Implementation Plan",
+    "source": "specs/coc-elt_20260712_rename-bronze-tables_implementation_plan.md"
   }
 }
