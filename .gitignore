@@ -36,6 +36,7 @@ db.sql
 tags.ipynb
 
 venv/
+.venv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
