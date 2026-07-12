@@ -25,13 +25,13 @@ class BigQueryIngester:
 
         table_id = f"{self.project_id}.{self.dataset_id}.{table_name}"
 
-        with tempfile.NamedTemporaryFile(mode='w+', suffix='.json') as tmp_file:
+        with tempfile.NamedTemporaryFile(mode='w+b', suffix='.json') as tmp_file:
             for record in records:
                 row = {
                     "extracted_at": extracted_at.isoformat(),
                     "payload": record
                 }
-                tmp_file.write(json.dumps(row) + "\n")
+                tmp_file.write((json.dumps(row) + "\n").encode("utf-8"))
             
             tmp_file.flush()
             tmp_file.seek(0)

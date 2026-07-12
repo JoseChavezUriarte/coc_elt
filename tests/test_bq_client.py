@@ -32,7 +32,7 @@ def test_ingest_batch_success(mock_bq_client_cls):
     mock_bq_client.load_table_from_file.assert_called_once()
     args, kwargs = mock_bq_client.load_table_from_file.call_args
     
-    parsed = json.loads(captured_content.strip())
+    parsed = json.loads(captured_content.decode("utf-8").strip())
     assert parsed["extracted_at"] == "2026-07-11T12:00:00+00:00"
     assert parsed["payload"] == {"key": "val"}
     
@@ -66,7 +66,7 @@ def test_ingest_batch_timezone_localization(mock_bq_client_cls):
     records = [{"key": "val"}]
     ingester.ingest_batch("coc_clan", records, aware_dt)
     
-    parsed = json.loads(captured_content.strip())
+    parsed = json.loads(captured_content.decode("utf-8").strip())
     assert parsed["extracted_at"] == "2026-07-11T12:00:00+00:00"
 
 @patch("google.cloud.bigquery.Client")
