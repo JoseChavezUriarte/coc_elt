@@ -1,7 +1,7 @@
 ---
 title: "BigQuery NDJSON Ingestion and Pydantic Data Contracts Walkthrough"
 project_id: "coc-elt"
-nyutu_uuid: "f6e72c84-18be-4078-9580-c11961e6878b"
+nyutu_uuid: "97a29c6a-9c3d-4659-b266-016e11b678e3"
 artifact_type: "Business Logic Constraint"
 tags:
   - "bigquery"
