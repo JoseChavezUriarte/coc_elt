@@ -1,5 +1,5 @@
 resource "google_project_service" "compute_services" {
-  for_each           = toset([
+  for_each = toset([
     "iam.googleapis.com",
     "cloudresourcemanager.googleapis.com",
     "compute.googleapis.com",

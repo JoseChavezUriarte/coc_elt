@@ -46,5 +46,9 @@
   "1bb1e994-ea56-4c8f-b0b5-33cb0f580299": {
     "title": "Import and Use Pre-existing Secret for GitHub Connection in Terraform",
     "source": "specs/coc_elt_20260712_import_github_token_secret_implementation_plan.md"
+  },
+  "229414f4-589d-461a-ad69-fd786bd07cdd": {
+    "title": "Import and Use Pre-existing Secret for GitHub Connection in Terraform Walkthrough",
+    "source": "specs/coc_elt_20260712_import_github_token_secret_walkthrough.md"
   }
 }

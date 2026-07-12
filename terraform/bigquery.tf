@@ -1,9 +1,9 @@
 resource "google_bigquery_dataset" "bronze" {
-  dataset_id                  = "coc_bronze"
-  friendly_name               = "Clash of Clans Bronze Dataset"
-  description                 = "Contains raw JSON payloads fetched from Clash of Clans API."
-  location                    = var.region
-  project                     = var.data_project_id
+  dataset_id                 = "coc_bronze"
+  friendly_name              = "Clash of Clans Bronze Dataset"
+  description                = "Contains raw JSON payloads fetched from Clash of Clans API."
+  location                   = var.region
+  project                    = var.data_project_id
   delete_contents_on_destroy = false
 }
 

@@ -82,7 +82,7 @@ We will modify the following file:
 
 ## 3. Implementation Tasks (Concrete STEPS)
 
-- [ ] T1 — Add `data.google_secret_manager_secret.github_token` in `terraform/cicd.tf`.
-- [ ] T2 — Add `google_secret_manager_secret_iam_member.cloudbuild_secret_accessor` in `terraform/cicd.tf`.
-- [ ] T3 — Update `google_cloudbuildv2_connection.github_conn` to include `github_config.authorizer_credential` and update its `depends_on` list in `terraform/cicd.tf`.
-- [ ] T4 — Run `terraform fmt` on `terraform/cicd.tf` to ensure style consistency.
+- [x] T1 — Add `data.google_secret_manager_secret.github_token` in `terraform/cicd.tf`.
+- [x] T2 — Add `google_secret_manager_secret_iam_member.cloudbuild_secret_accessor` in `terraform/cicd.tf`.
+- [x] T3 — Update `google_cloudbuildv2_connection.github_conn` to include `github_config.authorizer_credential` and update its `depends_on` list in `terraform/cicd.tf`.
+- [x] T4 — Run `terraform fmt` on `terraform/cicd.tf` to ensure style consistency.
