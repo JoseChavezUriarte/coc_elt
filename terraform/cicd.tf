@@ -39,8 +39,7 @@ resource "google_cloudbuild_trigger" "github_trigger" {
     }
   }
 
-  filename        = "cloudbuild.yaml"
-  service_account = "projects/${var.compute_project_id}/serviceAccounts/${data.google_project.compute_project.number}@cloudbuild.gserviceaccount.com"
+  filename = "cloudbuild.yaml"
 
   depends_on = [google_project_service.compute_services]
 }
