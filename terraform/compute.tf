@@ -8,7 +8,7 @@ resource "google_cloud_run_v2_job" "elt_job" {
       service_account = google_service_account.elt_runner.email
 
       containers {
-        image = "gcr.io/${var.compute_project_id}/coc-elt-pipeline:latest"
+        image = "gcr.io/cloudrun/hello"
 
         env {
           name  = "DATA_PROJECT_ID"

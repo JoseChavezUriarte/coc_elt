@@ -50,5 +50,13 @@
   "229414f4-589d-461a-ad69-fd786bd07cdd": {
     "title": "Import and Use Pre-existing Secret for GitHub Connection in Terraform Walkthrough",
     "source": "specs/coc_elt_20260712_import_github_token_secret_walkthrough.md"
+  },
+  "a5462a25-55d2-4d4e-805d-0b5ae5ea2dfd": {
+    "title": "Resolve Terraform Apply Errors and Document Deployment Process Implementation Plan",
+    "source": "specs/coc_elt_20260712_resolve_terraform_errors_implementation_plan.md"
+  },
+  "bdd749d0-be09-4b24-a275-2610906a166a": {
+    "title": "Resolve Terraform Apply Errors and Document Deployment Process Walkthrough",
+    "source": "specs/coc_elt_20260712_resolve_terraform_errors_walkthrough.md"
   }
 }

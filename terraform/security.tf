@@ -60,7 +60,7 @@ resource "google_project_iam_member" "workflows_invoker" {
 resource "google_cloud_run_v2_job_iam_member" "run_developer" {
   project  = var.compute_project_id
   location = var.region
-  name     = "coc-elt-job"
+  name     = google_cloud_run_v2_job.elt_job.name
   role     = "roles/run.developer"
   member   = "serviceAccount:${google_service_account.elt_runner.email}"
 

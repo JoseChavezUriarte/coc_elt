@@ -102,3 +102,12 @@ tests/test_main.py .                                                     [100%]
 ### Technical Debt
 - **Credentials in Non-Prod**: Clash of Clans API keys are expected to be injected in GCP Secret Manager. For local dev/test, dummy mock values are utilized.
 - **Workflow Error Routing**: Workflows will raise execution errors and terminate if the Cloud Run Job fails, but there is no notification system (e.g. Pub/Sub or Slack alerts) integrated yet.
+
+
+---
+
+### Deployment Workflow (2-Step Targeted Apply)
+To deploy this infrastructure successfully, follow a 2-step targeted apply process:
+1. **Provision the connection first**: Run `terraform apply -target=google_cloudbuildv2_connection.github_conn` to create the Cloud Build v2 connection.
+2. **Authorize via Console**: Go to GCP Console -> Cloud Build -> Repositories -> 2nd Gen tab, select `coc-elt-connection`, and authorize access to GitHub.
+3. **Run Full Apply**: Execute `terraform apply` to provision the repository connection and webhook trigger safely without errors.
