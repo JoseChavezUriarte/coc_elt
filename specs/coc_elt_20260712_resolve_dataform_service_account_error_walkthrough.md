@@ -1,7 +1,7 @@
 ---
 title: "Resolve Dataform strict act-as permission error Walkthrough"
 project_id: "coc-elt"
-nyutu_uuid: "f06d8b3b-7e82-44e9-a549-ab6ddb94ce66"
+nyutu_uuid: "81ddd809-c823-4665-8902-4cde460f60cf"
 artifact_type: "Infrastructure Pattern"
 tags:
   - "terraform"
