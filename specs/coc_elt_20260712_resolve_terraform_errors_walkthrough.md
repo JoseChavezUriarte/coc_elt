@@ -27,6 +27,7 @@ source_uri: "specs/coc_elt_20260712_resolve_terraform_errors_walkthrough.md"
   - `terraform/services.tf`
   - `terraform/compute.tf`
   - `terraform/security.tf`
+  - `terraform/workflow.yaml`
   - `README.md`
   - `specs/coc-elt_20260711_cross-project-elt-pipeline_walkthrough.md`
   - `specs/coc_elt_20260712_resolve_terraform_errors_implementation_plan.md`
@@ -35,6 +36,7 @@ source_uri: "specs/coc_elt_20260712_resolve_terraform_errors_walkthrough.md"
 - **Single Responsibility Principle (SRP)**: API enablement (`services.tf`), computing resources (`compute.tf`), and IAM security bindings (`security.tf`) are decoupled and keep their respective responsibilities.
 - **Dependency Inversion (DIP)**: By using a dynamic reference (`google_cloud_run_v2_job.elt_job.name`) instead of a hardcoded string, Terraform can infer dependency graph ordering correctly, preventing a resource-not-found 404 race condition.
 - **Bootstrapping Pattern**: Cloud Run job starts with a public bootstrap container image (`gcr.io/cloudrun/hello`) to solve the chicken-and-egg dependency where CI/CD triggers build the custom container but cannot be provisioned until the job configuration exists.
+- **Workflows REST Orchestrator**: Replaced the non-existent built-in Workflows connector for Dataform (`googleapis.dataform.v1beta1...`) with an authenticated `http.post` call to Dataform's `workflowInvocations` REST endpoint, preventing workflow compilation errors.
 
 ### Validation Artifacts
 - Successful `terraform validate` run confirming configuration validity.
