@@ -48,6 +48,8 @@ The following files were created or modified during the feature implementation:
   - `specs/coc-elt_20260712_enable-gcp-apis_implementation_plan.md`
   - `specs/coc-elt_20260712_provision-remaining-resources_implementation_plan.md`
   - `specs/coc-elt_20260712_provision-remaining-resources_walkthrough.md`
+  - `specs/coc_elt_20260712_import_github_token_secret_implementation_plan.md`
+  - `specs/coc_elt_20260712_import_github_token_secret_walkthrough.md`
   - `src/coc_elt/config.py`
   - `src/coc_elt/api_client.py`
   - `src/coc_elt/bq_client.py`
