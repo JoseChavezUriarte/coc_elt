@@ -1,7 +1,7 @@
 ---
 title: "Configure BigQuery Client Project - Walkthrough"
 project_id: "coc-elt"
-nyutu_uuid: "db4bb2e6-a2de-426c-9c02-e22ff2754c0e"
+nyutu_uuid: "2f77c178-7035-4982-8f67-06a988e21e6b"
 artifact_type: "Walkthrough"
 tags:
   - "bigquery"
