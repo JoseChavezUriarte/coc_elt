@@ -46,6 +46,7 @@ resource "google_dataform_repository" "coc_elt" {
   depends_on = [
     google_service_account_iam_member.dataform_sa_user,
     google_service_account_iam_member.dataform_sa_token_creator,
+    google_service_account_iam_member.developer_sa_user,
   ]
 }
 
