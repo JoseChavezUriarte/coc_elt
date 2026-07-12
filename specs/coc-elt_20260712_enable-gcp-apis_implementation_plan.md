@@ -28,6 +28,7 @@ This document defines the architectural decision and implementation plan for exp
   - `run.googleapis.com`
   - `workflows.googleapis.com`
   - `cloudscheduler.googleapis.com`
+  - `cloudbuild.googleapis.com`
 - **R2 (No Data Project APIs)**: The system MUST NOT attempt to enable APIs in the external Data Project (`var.data_project_id`), as the deploying identity lacks administrative permissions in that project.
 - **R3 (Compute Resources Dependency)**: The system MUST configure all resource definitions in the Compute Project to explicitly depend on `google_project_service.compute_services` to guarantee that the required APIs are fully operational before resource creation.
 - **R4 (Cross-Project Resources Dependency)**: The system MUST configure all resources that cross project boundaries (such as cross-project IAM members) to depend on `google_project_service.compute_services` to ensure Compute services are active before provisioning.
@@ -82,7 +83,8 @@ resource "google_project_service" "compute_services" {
     "secretmanager.googleapis.com",
     "run.googleapis.com",
     "workflows.googleapis.com",
-    "cloudscheduler.googleapis.com"
+    "cloudscheduler.googleapis.com",
+    "cloudbuild.googleapis.com"
   ])
   project            = var.compute_project_id
   service            = each.key

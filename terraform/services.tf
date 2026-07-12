@@ -6,7 +6,8 @@ resource "google_project_service" "compute_services" {
     "secretmanager.googleapis.com",
     "run.googleapis.com",
     "workflows.googleapis.com",
-    "cloudscheduler.googleapis.com"
+    "cloudscheduler.googleapis.com",
+    "cloudbuild.googleapis.com"
   ])
   project            = var.compute_project_id
   service            = each.key
