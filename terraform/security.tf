@@ -135,4 +135,25 @@ resource "google_project_iam_member" "elt_runner_run_viewer" {
   depends_on = [google_project_service.compute_services]
 }
 
+data "google_project" "data_project" {
+  project_id = var.data_project_id
+}
+
+resource "google_service_account_iam_member" "dataform_sa_user" {
+  service_account_id = google_service_account.elt_runner.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:service-${data.google_project.data_project.number}@gcp-sa-dataform.iam.gserviceaccount.com"
+
+  depends_on = [google_project_service.compute_services]
+}
+
+resource "google_service_account_iam_member" "dataform_sa_token_creator" {
+  service_account_id = google_service_account.elt_runner.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:service-${data.google_project.data_project.number}@gcp-sa-dataform.iam.gserviceaccount.com"
+
+  depends_on = [google_project_service.compute_services]
+}
+
+
 
