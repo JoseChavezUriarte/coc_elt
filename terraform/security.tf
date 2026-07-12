@@ -127,3 +127,12 @@ resource "google_project_iam_member" "elt_runner_artifact_registry_writer" {
   depends_on = [google_project_service.compute_services]
 }
 
+resource "google_project_iam_member" "elt_runner_run_viewer" {
+  project = var.compute_project_id
+  role    = "roles/run.viewer"
+  member  = "serviceAccount:${google_service_account.elt_runner.email}"
+
+  depends_on = [google_project_service.compute_services]
+}
+
+
