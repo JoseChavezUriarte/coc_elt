@@ -90,6 +90,10 @@
   "20790b99-a316-43b9-bb80-c11df5d4b31a": {
     "title": "Provision Dedicated Service Account for Dataform with Eventual Consistency Mitigation Walkthrough",
     "source": "specs/coc_elt_20260712_revised_dataform_runner_sa_walkthrough.md"
+  },
+  "f0f3e79d-c101-4c6a-a387-907990664712": {
+    "title": "Generate GCP ELT Architecture Diagram Walkthrough",
+    "source": "specs/coc_elt_20260712_generate_infra_walkthrough.md"
   }
 }
 

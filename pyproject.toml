@@ -16,6 +16,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "diagrams>=0.25.1",
     "ipython>=9.15.0",
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
