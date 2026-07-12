@@ -30,6 +30,7 @@ def test_ingest_batch_success(mock_bq_client_cls):
     expected_table_id = "test-project.test_dataset.coc_clan"
     
     mock_bq_client.load_table_from_file.assert_called_once()
+    mock_bq_client_cls.assert_called_once_with(project="test-project")
     args, kwargs = mock_bq_client.load_table_from_file.call_args
     
     parsed = json.loads(captured_content.decode("utf-8").strip())
@@ -66,6 +67,7 @@ def test_ingest_batch_timezone_localization(mock_bq_client_cls):
     records = [{"key": "val"}]
     ingester.ingest_batch("coc_clan", records, aware_dt)
     
+    mock_bq_client_cls.assert_called_once_with(project="test-project")
     parsed = json.loads(captured_content.decode("utf-8").strip())
     assert parsed["extracted_at"] == "2026-07-11T12:00:00+00:00"
 
@@ -83,6 +85,7 @@ def test_ingest_batch_load_job_exception(mock_bq_client_cls):
     dt = datetime(2026, 7, 11, 12, 0, 0, tzinfo=timezone.utc)
     with pytest.raises(RuntimeError, match="BigQuery load job failed"):
         ingester.ingest_batch("coc_clan", [{"key": "val"}], dt)
+    mock_bq_client_cls.assert_called_once_with(project="test-project")
 
 @patch("google.cloud.bigquery.Client")
 def test_ingest_batch_load_job_errors(mock_bq_client_cls):
@@ -98,3 +101,4 @@ def test_ingest_batch_load_job_errors(mock_bq_client_cls):
     dt = datetime(2026, 7, 11, 12, 0, 0, tzinfo=timezone.utc)
     with pytest.raises(RuntimeError, match="BigQuery load job failed with errors"):
         ingester.ingest_batch("coc_clan", [{"key": "val"}], dt)
+    mock_bq_client_cls.assert_called_once_with(project="test-project")
