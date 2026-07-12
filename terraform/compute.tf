@@ -38,6 +38,8 @@ resource "google_cloud_run_v2_job" "elt_job" {
       }
     }
   }
+
+  depends_on = [google_project_service.compute_services]
 }
 
 resource "google_workflows_workflow" "workflow" {
@@ -58,11 +60,11 @@ main:
     - wait_job:
         call: googleapis.run.v2.projects.locations.operations.get
         args:
-          name: \$${operation.name}
+          name: $${operation.name}
         result: op_status
     - check_job_status:
         switch:
-          - condition: \$${op_status.done == true}
+          - condition: $${op_status.done == true}
             next: check_job_error
         next: wait_and_poll
     - wait_and_poll:
@@ -72,8 +74,8 @@ main:
         next: wait_job
     - check_job_error:
         switch:
-          - condition: \$${"error" in op_status}
-            raise: \$${op_status.error}
+          - condition: $${"error" in op_status}
+            raise: $${op_status.error}
         next: run_dataform
     - run_dataform:
         call: googleapis.dataform.v1beta1.projects.locations.repositories.workflowInvocations.create
@@ -83,8 +85,10 @@ main:
             compilationResult: "projects/${var.data_project_id}/locations/${var.region}/repositories/coc-elt/compilationResults/main"
         result: df_invocation
     - return_result:
-        return: \$${df_invocation}
+        return: $${df_invocation}
 EOF
+
+  depends_on = [google_project_service.compute_services]
 }
 
 resource "google_cloud_scheduler_job" "scheduler" {
@@ -109,4 +113,6 @@ resource "google_cloud_scheduler_job" "scheduler" {
       scope                 = "https://www.googleapis.com/auth/cloud-platform"
     }
   }
+
+  depends_on = [google_project_service.compute_services]
 }

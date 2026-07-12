@@ -11,4 +11,6 @@ resource "google_storage_bucket" "tf_state" {
   versioning {
     enabled = true
   }
+
+  depends_on = [google_project_service.compute_services]
 }

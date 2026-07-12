@@ -18,5 +18,9 @@
   "81a47ae0-074b-4530-b1e6-2a3f78c934d0": {
     "title": "Cross-Project ELT Pipeline Implementation Walkthrough",
     "source": "specs/coc-elt_20260711_cross-project-elt-pipeline_walkthrough.md"
+  },
+  "cf6be15a-f181-438f-86b9-d029f967a87f": {
+    "title": "Explicit Enablement of Google Cloud APIs in Terraform",
+    "source": "specs/coc-elt_20260712_enable-gcp-apis_implementation_plan.md"
   }
 }
