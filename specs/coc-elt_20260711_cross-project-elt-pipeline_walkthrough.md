@@ -52,6 +52,7 @@ The following files were created or modified during the feature implementation:
   - `tests/test_logging.py`
   - `tests/test_main.py`
   - `Dockerfile`
+  - `cloudbuild.yaml`
 
 - **Modified**:
   - `pyproject.toml`

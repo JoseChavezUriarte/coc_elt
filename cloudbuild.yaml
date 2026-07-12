@@ -1,0 +1,51 @@
+steps:
+  # 1. Run Unit Tests using pytest
+  - name: 'python:3.13-slim'
+    id: 'run-tests'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        pip install --no-cache-dir uv
+        uv sync
+        uv run pytest
+
+  # 2. Build the Docker Image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-image'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/coc-elt-pipeline:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/coc-elt-pipeline:latest'
+      - '.'
+
+  # 3. Push the Docker Image with Commit SHA tag
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-sha'
+    args: ['push', 'gcr.io/$PROJECT_ID/coc-elt-pipeline:$COMMIT_SHA']
+
+  # 4. Push the Docker Image with 'latest' tag
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-latest'
+    args: ['push', 'gcr.io/$PROJECT_ID/coc-elt-pipeline:latest']
+
+  # 5. Update the Cloud Run Job with the new image
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-job'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'jobs'
+      - 'update'
+      - 'coc-elt-job'
+      - '--image=gcr.io/$PROJECT_ID/coc-elt-pipeline:$COMMIT_SHA'
+      - '--region=$_REGION'
+      - '--project=$PROJECT_ID'
+
+substitutions:
+  _REGION: 'us-east1'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
