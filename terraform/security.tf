@@ -118,3 +118,12 @@ resource "google_project_iam_member" "elt_runner_storage_admin" {
 
   depends_on = [google_project_service.compute_services]
 }
+
+resource "google_project_iam_member" "elt_runner_artifact_registry_writer" {
+  project = var.compute_project_id
+  role    = "roles/artifactregistry.writer"
+  member  = "serviceAccount:${google_service_account.elt_runner.email}"
+
+  depends_on = [google_project_service.compute_services]
+}
+
