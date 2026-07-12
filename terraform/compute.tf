@@ -1,7 +1,8 @@
 resource "google_cloud_run_v2_job" "elt_job" {
-  name     = "coc-elt-job"
-  location = var.region
-  project  = var.compute_project_id
+  name                = "coc-elt-job"
+  location            = var.region
+  project             = var.compute_project_id
+  deletion_protection = false
 
   template {
     template {
