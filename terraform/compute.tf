@@ -22,7 +22,7 @@ resource "google_cloud_run_v2_job" "elt_job" {
           name = "COC_APIKEY"
           value_source {
             secret_key_ref {
-              secret  = data.google_secret_manager_secret.coc_api_key.secret_id
+              secret  = google_secret_manager_secret.coc_api_key.secret_id
               version = "latest"
             }
           }

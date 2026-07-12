@@ -6,14 +6,26 @@ resource "google_service_account" "elt_runner" {
   depends_on = [google_project_service.compute_services]
 }
 
-data "google_secret_manager_secret" "coc_api_key" {
+resource "google_secret_manager_secret" "coc_api_key" {
   secret_id = "COC_APIKEY"
   project   = var.compute_project_id
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_project_service.compute_services]
+}
+
+resource "google_secret_manager_secret_version" "coc_api_key_version" {
+  secret      = google_secret_manager_secret.coc_api_key.id
+  secret_data = "PLACEHOLDER_CHANGE_ME"
+
+  depends_on = [google_project_service.compute_services]
 }
 
 resource "google_secret_manager_secret_iam_member" "accessor" {
   project   = var.compute_project_id
-  secret_id = data.google_secret_manager_secret.coc_api_key.secret_id
+  secret_id = google_secret_manager_secret.coc_api_key.secret_id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.elt_runner.email}"
 
