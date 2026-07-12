@@ -49,44 +49,11 @@ resource "google_workflows_workflow" "workflow" {
   description     = "Orchestrates the Clash of Clans ELT pipeline: Cloud Run Job -> Dataform"
   service_account = google_service_account.elt_runner.id
 
-  source_contents = <<EOF
-main:
-  steps:
-    - run_job:
-        call: googleapis.run.v2.projects.locations.jobs.run
-        args:
-          name: "projects/${var.compute_project_id}/locations/${var.region}/jobs/coc-elt-job"
-        result: operation
-    - wait_job:
-        call: googleapis.run.v2.projects.locations.operations.get
-        args:
-          name: $${operation.name}
-        result: op_status
-    - check_job_status:
-        switch:
-          - condition: $${op_status.done == true}
-            next: check_job_error
-        next: wait_and_poll
-    - wait_and_poll:
-        call: sys.sleep
-        args:
-          seconds: 10
-        next: wait_job
-    - check_job_error:
-        switch:
-          - condition: $${"error" in op_status}
-            raise: $${op_status.error}
-        next: run_dataform
-    - run_dataform:
-        call: googleapis.dataform.v1beta1.projects.locations.repositories.workflowInvocations.create
-        args:
-          parent: "projects/${var.data_project_id}/locations/${var.region}/repositories/coc-elt"
-          body:
-            compilationResult: "projects/${var.data_project_id}/locations/${var.region}/repositories/coc-elt/compilationResults/main"
-        result: df_invocation
-    - return_result:
-        return: $${df_invocation}
-EOF
+  source_contents = templatefile("${path.module}/workflow.yaml", {
+    compute_project_id = var.compute_project_id
+    data_project_id    = var.data_project_id
+    region             = var.region
+  })
 
   depends_on = [google_project_service.compute_services]
 }

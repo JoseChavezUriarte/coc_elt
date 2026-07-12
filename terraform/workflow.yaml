@@ -1,0 +1,36 @@
+main:
+  steps:
+    - run_job:
+        call: googleapis.run.v2.projects.locations.jobs.run
+        args:
+          name: "projects/${compute_project_id}/locations/${region}/jobs/coc-elt-job"
+        result: operation
+    - wait_job:
+        call: googleapis.run.v2.projects.locations.operations.get
+        args:
+          name: $${operation.name}
+        result: op_status
+    - check_job_status:
+        switch:
+          - condition: $${op_status.done == true}
+            next: check_job_error
+        next: wait_and_poll
+    - wait_and_poll:
+        call: sys.sleep
+        args:
+          seconds: 10
+        next: wait_job
+    - check_job_error:
+        switch:
+          - condition: $${"error" in op_status}
+            raise: $${op_status.error}
+        next: run_dataform
+    - run_dataform:
+        call: googleapis.dataform.v1beta1.projects.locations.repositories.workflowInvocations.create
+        args:
+          parent: "projects/${data_project_id}/locations/${region}/repositories/coc-elt"
+          body:
+            compilationResult: "projects/${data_project_id}/locations/${region}/repositories/coc-elt/compilationResults/main"
+        result: df_invocation
+    - return_result:
+        return: $${df_invocation}

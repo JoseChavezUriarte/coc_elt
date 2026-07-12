@@ -26,5 +26,13 @@
   "ede11d59-74cd-4153-9660-8c064f55e721": {
     "title": "Rename Bronze Tables Implementation Plan",
     "source": "specs/coc-elt_20260712_rename-bronze-tables_implementation_plan.md"
+  },
+  "c2d7487d-c09b-4702-acd9-f418cc85c8c1": {
+    "title": "Extract Cloud Workflows into External Template File Implementation Plan",
+    "source": "specs/coc-elt_20260712_extract-workflow-template_implementation_plan.md"
+  },
+  "947bd6e1-0bda-49e8-952b-6c85b89ad755": {
+    "title": "Extract Cloud Workflows into External Template File Walkthrough",
+    "source": "specs/coc-elt_20260712_extract-workflow-template_walkthrough.md"
   }
 }
