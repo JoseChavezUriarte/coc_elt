@@ -32,6 +32,8 @@ resource "google_cloudbuild_trigger" "github_trigger" {
   name        = "coc-elt-trigger"
   description = "Trigger for Clash of Clans ELT pipeline on main branch push"
 
+  service_account = "projects/${var.compute_project_id}/serviceAccounts/${google_service_account.elt_runner.email}"
+
   repository_event_config {
     repository = google_cloudbuildv2_repository.github_repo.id
     push {

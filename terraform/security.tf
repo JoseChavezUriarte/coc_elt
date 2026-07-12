@@ -102,3 +102,19 @@ resource "google_service_account_iam_member" "cloudbuild_sa_user" {
 
   depends_on = [google_project_service.compute_services]
 }
+
+resource "google_project_iam_member" "elt_runner_logging_writer" {
+  project = var.compute_project_id
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${google_service_account.elt_runner.email}"
+
+  depends_on = [google_project_service.compute_services]
+}
+
+resource "google_project_iam_member" "elt_runner_storage_admin" {
+  project = var.compute_project_id
+  role    = "roles/storage.admin"
+  member  = "serviceAccount:${google_service_account.elt_runner.email}"
+
+  depends_on = [google_project_service.compute_services]
+}

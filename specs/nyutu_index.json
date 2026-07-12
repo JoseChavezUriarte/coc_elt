@@ -58,5 +58,13 @@
   "bdd749d0-be09-4b24-a275-2610906a166a": {
     "title": "Resolve Terraform Apply Errors and Document Deployment Process Walkthrough",
     "source": "specs/coc_elt_20260712_resolve_terraform_errors_walkthrough.md"
+  },
+  "ec4625be-e1be-422e-afe1-e3dc0deff4a9": {
+    "title": "Resolve Cloud Build trigger 400 / service account error by using coc-elt-runner service account Implementation Plan",
+    "source": "specs/coc_elt_20260712_resolve_cloudbuild_sa_error_implementation_plan.md"
+  },
+  "5a080895-9b68-4d75-9362-9925099cfe56": {
+    "title": "Resolve Cloud Build trigger 400 / service account error by using coc-elt-runner service account Walkthrough",
+    "source": "specs/coc_elt_20260712_resolve_cloudbuild_sa_error_walkthrough.md"
   }
 }
