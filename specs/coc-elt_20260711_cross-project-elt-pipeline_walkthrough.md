@@ -44,7 +44,10 @@ The following files were created or modified during the feature implementation:
   - `terraform/compute.tf`
   - `terraform/backend_bucket.tf`
   - `terraform/services.tf`
+  - `terraform/cicd.tf`
   - `specs/coc-elt_20260712_enable-gcp-apis_implementation_plan.md`
+  - `specs/coc-elt_20260712_provision-remaining-resources_implementation_plan.md`
+  - `specs/coc-elt_20260712_provision-remaining-resources_walkthrough.md`
   - `src/coc_elt/config.py`
   - `src/coc_elt/api_client.py`
   - `src/coc_elt/bq_client.py`
