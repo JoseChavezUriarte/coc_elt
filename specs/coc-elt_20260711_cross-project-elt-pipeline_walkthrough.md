@@ -42,6 +42,7 @@ The following files were created or modified during the feature implementation:
   - `terraform/security.tf`
   - `terraform/bigquery.tf`
   - `terraform/compute.tf`
+  - `terraform/backend_bucket.tf`
   - `src/coc_elt/config.py`
   - `src/coc_elt/api_client.py`
   - `src/coc_elt/bq_client.py`
