@@ -2,7 +2,7 @@ import urllib.parse
 import requests
 import logging
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 logger = logging.getLogger(__name__)
 
@@ -24,18 +24,28 @@ class CocApiClient:
             "Accept": "application/json"
         }
 
-    def _get(self, endpoint: str) -> Dict[str, Any]:
+    def _get(self, endpoint: str, expected_statuses: Optional[List[int]] = None) -> Dict[str, Any]:
         url = f"{self.base_url}/{endpoint}"
         response = requests.get(url, headers=self.headers)
         if not response.ok:
-            logger.error(
-                "Failed to fetch data from Clash of Clans API",
-                extra={
-                    "url": url,
-                    "status_code": response.status_code,
-                    "response_text": response.text
-                }
-            )
+            if expected_statuses and response.status_code in expected_statuses:
+                logger.info(
+                    "Failed to fetch data from Clash of Clans API (expected status)",
+                    extra={
+                        "url": url,
+                        "status_code": response.status_code,
+                        "response_text": response.text
+                    }
+                )
+            else:
+                logger.error(
+                    "Failed to fetch data from Clash of Clans API",
+                    extra={
+                        "url": url,
+                        "status_code": response.status_code,
+                        "response_text": response.text
+                    }
+                )
             response.raise_for_status()
         return response.json()
 
@@ -64,7 +74,7 @@ class CocApiClient:
 
     def fetch_league_group(self) -> Optional[Dict[str, Any]]:
         try:
-            return self._get(f"clans/{self.clan_tag}/currentwar/leaguegroup")
+            return self._get(f"clans/{self.clan_tag}/currentwar/leaguegroup", expected_statuses=[404])
         except requests.HTTPError as e:
             if e.response is not None and e.response.status_code == 404:
                 return None

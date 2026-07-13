@@ -100,7 +100,7 @@ def test_fetch_league_group_success(mock_get):
     )
 
 @patch("requests.get")
-def test_fetch_league_group_404(mock_get):
+def test_fetch_league_group_404(mock_get, caplog):
     mock_response = MagicMock()
     mock_response.ok = False
     mock_response.status_code = 404
@@ -111,9 +111,52 @@ def test_fetch_league_group_404(mock_get):
     mock_get.return_value = mock_response
 
     client = CocApiClient(api_key="test-key", clan_tag="#TESTCLAN")
-    lg_data = client.fetch_league_group()
+    with caplog.at_level("INFO"):
+        lg_data = client.fetch_league_group()
 
     assert lg_data is None
+    info_logs = [r for r in caplog.records if r.levelname == "INFO" and "expected status" in r.message]
+    error_logs = [r for r in caplog.records if r.levelname == "ERROR"]
+    assert len(info_logs) == 1
+    assert len(error_logs) == 0
+
+@patch("requests.get")
+def test_get_expected_status_logged_as_info(mock_get, caplog):
+    mock_response = MagicMock()
+    mock_response.ok = False
+    mock_response.status_code = 404
+    mock_response.text = "Not Found"
+    mock_response.raise_for_status.side_effect = requests.HTTPError("404 Not Found", response=mock_response)
+    mock_get.return_value = mock_response
+
+    client = CocApiClient(api_key="test-key", clan_tag="#TESTCLAN")
+    with pytest.raises(requests.HTTPError):
+        with caplog.at_level("INFO"):
+            client._get("test-endpoint", expected_statuses=[404])
+
+    info_logs = [r for r in caplog.records if r.levelname == "INFO" and "expected status" in r.message]
+    error_logs = [r for r in caplog.records if r.levelname == "ERROR"]
+    assert len(info_logs) == 1
+    assert len(error_logs) == 0
+
+@patch("requests.get")
+def test_get_unexpected_status_logged_as_error(mock_get, caplog):
+    mock_response = MagicMock()
+    mock_response.ok = False
+    mock_response.status_code = 500
+    mock_response.text = "Internal Server Error"
+    mock_response.raise_for_status.side_effect = requests.HTTPError("500 Internal Server Error", response=mock_response)
+    mock_get.return_value = mock_response
+
+    client = CocApiClient(api_key="test-key", clan_tag="#TESTCLAN")
+    with pytest.raises(requests.HTTPError):
+        with caplog.at_level("INFO"):
+            client._get("test-endpoint", expected_statuses=[404])
+
+    info_logs = [r for r in caplog.records if r.levelname == "INFO"]
+    error_logs = [r for r in caplog.records if r.levelname == "ERROR" and "Failed to fetch data" in r.message]
+    assert len(info_logs) == 0
+    assert len(error_logs) == 1
 
 @patch("requests.get")
 def test_fetch_warleague_war(mock_get):

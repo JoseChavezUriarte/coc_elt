@@ -110,6 +110,10 @@
   "541c05e5-6aef-46f1-87d2-904a5438b101": {
     "title": "Resolve scripts module import error in Cloud Build Walkthrough",
     "source": "specs/coc-elt_20260713_resolve-scripts-import-error_walkthrough.md"
+  },
+  "a9bed0f5-bf97-47f8-9938-a6a1051ae102": {
+    "title": "Update API Client to Log Expected HTTP Statuses as INFO Walkthrough",
+    "source": "specs/coc-elt_20260713_update-api-client-logging_walkthrough.md"
   }
 }
 
