@@ -114,6 +114,10 @@
   "a9bed0f5-bf97-47f8-9938-a6a1051ae102": {
     "title": "Update API Client to Log Expected HTTP Statuses as INFO Walkthrough",
     "source": "specs/coc-elt_20260713_update-api-client-logging_walkthrough.md"
+  },
+  "b6cfaac9-d2db-476b-971a-0dc2eb1f11ec": {
+    "title": "Historical MongoDB Data Backfill Walkthrough for coc_league_group Table",
+    "source": "specs/coc-elt_20260713_backfill-league-group_walkthrough.md"
   }
 }
 

@@ -194,7 +194,7 @@ def process_and_backfill(
         try:
             db = mongo_client[db_name]
             cols = db.list_collection_names()
-            if 'clan' in cols or 'warlog' in cols:
+            if any(c in cols for c in ('clan', 'warlog', 'warleague', 'warleagues', 'capital_raids')):
                 target_db_name = db_name
                 logger.info("Found Clash of Clans database: '%s'", target_db_name)
                 break
@@ -202,7 +202,7 @@ def process_and_backfill(
             logger.warning("Error checking database '%s': %s", db_name, e)
             
     if not target_db_name:
-        raise RuntimeError("Could not find a MongoDB database containing collections 'clan' or 'warlog'.")
+        raise RuntimeError("Could not find a MongoDB database containing collections 'clan', 'warlog', 'warleague', 'warleagues', or 'capital_raids'.")
         
     db = mongo_client[target_db_name]
     cols = db.list_collection_names()
@@ -285,6 +285,25 @@ def process_and_backfill(
             write_disposition=bigquery.WriteDisposition.WRITE_APPEND
         )
 
+    # Process 'warleague' / 'warleagues' collection
+    warleague_col = next((c for c in ("warleague", "warleagues") if c in cols), None)
+    if warleague_col and table in ("all", "coc_league_group"):
+        league_group_rows: List[Dict[str, Any]] = []
+        logger.info("Processing collection '%s'...", warleague_col)
+        for doc in db[warleague_col].find():
+            extracted_at_str = get_extracted_at(doc).isoformat()
+            payload = {k: v for k, v in doc.items() if k != "_id"}
+            league_group_rows.append({
+                "extracted_at": extracted_at_str,
+                "payload": clean_mongo_doc(payload)
+            })
+        load_table_data(
+            bq_client,
+            f"{project_id}.{dataset_id}.coc_league_group",
+            league_group_rows,
+            write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE
+        )
+
 def main() -> None:
     setup_logging()
     
@@ -314,7 +333,8 @@ def main() -> None:
     parser.add_argument(
         "--table",
         default="all",
-        help="Specific target table to backfill (e.g. coc_members), or 'all' to process all tables."
+        choices=["all", "coc_clan", "coc_members", "coc_current_war", "coc_capital_raids", "coc_league_group"],
+        help="Specific target table to backfill (e.g. coc_league_group), or 'all' to process all tables."
     )
     
     args = parser.parse_args()

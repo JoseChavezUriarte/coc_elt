@@ -171,16 +171,18 @@ def test_process_and_backfill_mapping():
     mock_mongo.list_database_names.return_value = ["admin", "local", "coc_db"]
     mock_db = MagicMock()
     mock_mongo.__getitem__.return_value = mock_db
-    mock_db.list_collection_names.return_value = ["clan", "warlog", "capital_raids"]
+    mock_db.list_collection_names.return_value = ["clan", "warlog", "capital_raids", "warleague"]
     
     mock_clan_col = MagicMock()
     mock_warlog_col = MagicMock()
     mock_raids_col = MagicMock()
+    mock_warleague_col = MagicMock()
     
     collections_map = {
         "clan": mock_clan_col,
         "warlog": mock_warlog_col,
-        "capital_raids": mock_raids_col
+        "capital_raids": mock_raids_col,
+        "warleague": mock_warleague_col
     }
     mock_db.__getitem__.side_effect = lambda key: collections_map[key]
     
@@ -214,9 +216,17 @@ def test_process_and_backfill_mapping():
         "raid_id": "raid123"
     }
     
+    league_doc = {
+        "_id": ObjectId("64afe3108c4e402ea29b8c03"),
+        "extracted_at": dt,
+        "state": "inWar",
+        "season": "2026-07"
+    }
+    
     mock_clan_col.find.return_value = [clan_doc]
     mock_warlog_col.find.return_value = [war_doc]
     mock_raids_col.find.return_value = [raid_doc]
+    mock_warleague_col.find.return_value = [league_doc]
     
     # Track load jobs
     loaded_data = {}
@@ -279,6 +289,17 @@ def test_process_and_backfill_mapping():
     assert "_id" not in raid_loaded[0]["payload"]
     assert raid_wd == bigquery.WriteDisposition.WRITE_APPEND
 
+    # Validate coc_league_group
+    assert "test-project.test_dataset.coc_league_group" in loaded_data
+    league_loaded = loaded_data["test-project.test_dataset.coc_league_group"]["rows"]
+    league_wd = loaded_data["test-project.test_dataset.coc_league_group"]["write_disposition"]
+    assert len(league_loaded) == 1
+    assert league_loaded[0]["extracted_at"] == "2026-07-13T12:00:00+00:00"
+    assert league_loaded[0]["payload"]["state"] == "inWar"
+    assert league_loaded[0]["payload"]["season"] == "2026-07"
+    assert "_id" not in league_loaded[0]["payload"]
+    assert league_wd == bigquery.WriteDisposition.WRITE_TRUNCATE
+
 def test_process_and_backfill_table_filtering():
     mock_mongo = MagicMock()
     mock_bq = MagicMock()
@@ -286,16 +307,18 @@ def test_process_and_backfill_table_filtering():
     mock_mongo.list_database_names.return_value = ["coc_db"]
     mock_db = MagicMock()
     mock_mongo.__getitem__.return_value = mock_db
-    mock_db.list_collection_names.return_value = ["clan", "warlog", "capital_raids"]
+    mock_db.list_collection_names.return_value = ["clan", "warlog", "capital_raids", "warleague"]
     
     mock_clan_col = MagicMock()
     mock_warlog_col = MagicMock()
     mock_raids_col = MagicMock()
+    mock_warleague_col = MagicMock()
     
     collections_map = {
         "clan": mock_clan_col,
         "warlog": mock_warlog_col,
-        "capital_raids": mock_raids_col
+        "capital_raids": mock_raids_col,
+        "warleague": mock_warleague_col
     }
     mock_db.__getitem__.side_effect = lambda key: collections_map[key]
     
@@ -345,6 +368,78 @@ def test_process_and_backfill_table_filtering():
     assert members_loaded[0]["payload"]["tag"] == "#PLAYER1"
     assert members_wd == bigquery.WriteDisposition.WRITE_TRUNCATE
     
-    # Ensure warlog and capital_raids find was NEVER called
+    # Ensure warlog, capital_raids, and warleague find was NEVER called
     mock_warlog_col.find.assert_not_called()
     mock_raids_col.find.assert_not_called()
+    mock_warleague_col.find.assert_not_called()
+
+    # Run only for coc_league_group
+    # Reinitialize mocks to reset call history
+    mock_clan_col.reset_mock()
+    mock_warlog_col.reset_mock()
+    mock_raids_col.reset_mock()
+    mock_warleague_col.reset_mock()
+    loaded_data.clear()
+    
+    # We mock warleague.find returning some doc
+    mock_warleague_col.find.return_value = [{
+        "_id": ObjectId("64afe3108c4e402ea29b8c03"),
+        "extracted_at": dt,
+        "season": "2026-07"
+    }]
+    
+    process_and_backfill(mock_mongo, mock_bq, "test-project", "test_dataset", table="coc_league_group")
+    
+    assert "test-project.test_dataset.coc_league_group" in loaded_data
+    assert "test-project.test_dataset.coc_clan" not in loaded_data
+    assert "test-project.test_dataset.coc_members" not in loaded_data
+    assert "test-project.test_dataset.coc_current_war" not in loaded_data
+    assert "test-project.test_dataset.coc_capital_raids" not in loaded_data
+    
+    mock_clan_col.find.assert_not_called()
+    mock_warlog_col.find.assert_not_called()
+    mock_raids_col.find.assert_not_called()
+    mock_warleague_col.find.assert_called_once()
+
+def test_process_and_backfill_mapping_warleagues_plural():
+    mock_mongo = MagicMock()
+    mock_bq = MagicMock()
+    
+    mock_mongo.list_database_names.return_value = ["coc_db"]
+    mock_db = MagicMock()
+    mock_mongo.__getitem__.return_value = mock_db
+    mock_db.list_collection_names.return_value = ["warleagues"]
+    
+    mock_warleague_col = MagicMock()
+    collections_map = {
+        "warleagues": mock_warleague_col
+    }
+    mock_db.__getitem__.side_effect = lambda key: collections_map[key]
+    
+    dt = datetime(2026, 7, 13, 12, 0, 0, tzinfo=timezone.utc)
+    league_doc = {
+        "_id": ObjectId("64afe3108c4e402ea29b8c03"),
+        "extracted_at": dt,
+        "state": "inWar"
+    }
+    mock_warleague_col.find.return_value = [league_doc]
+    
+    loaded_data = {}
+    def mock_load(file_obj, table_id, job_config):
+        content = file_obj.read()
+        loaded_data[table_id] = {
+            "rows": [json.loads(line) for line in content.decode("utf-8").strip().split("\n") if line],
+            "write_disposition": job_config.write_disposition if job_config else None
+        }
+        mock_job = MagicMock()
+        mock_job.errors = None
+        return mock_job
+        
+    mock_bq.load_table_from_file.side_effect = mock_load
+    
+    process_and_backfill(mock_mongo, mock_bq, "test-project", "test_dataset")
+    
+    assert "test-project.test_dataset.coc_league_group" in loaded_data
+    league_loaded = loaded_data["test-project.test_dataset.coc_league_group"]["rows"]
+    assert len(league_loaded) == 1
+    assert league_loaded[0]["payload"]["state"] == "inWar"
