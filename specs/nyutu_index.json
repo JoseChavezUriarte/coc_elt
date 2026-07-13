@@ -126,6 +126,10 @@
   "696826f4-b040-4e9c-8d24-7ffb81f0d811": {
     "title": "Transition Dataform Package Management from npm to pnpm Walkthrough",
     "source": "specs/coc-elt_20260713_transition-to-pnpm_walkthrough.md"
+  },
+  "e1f3a6cb-b8ba-4b8b-8705-40e1e37bfa05": {
+    "title": "Resolve 403 Permission Denied in run_dataform GCP Workflow Step Walkthrough",
+    "source": "specs/coc-elt_20260713_resolve-workflow-dataform-403_walkthrough.md"
   }
 }
 

@@ -179,13 +179,20 @@ resource "google_service_account_iam_member" "developer_sa_user" {
   member             = "user:${each.value}"
 }
 
+resource "google_service_account_iam_member" "elt_runner_dataform_sa_user" {
+  service_account_id = google_service_account.dataform_runner.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.elt_runner.email}"
+}
+
 resource "time_sleep" "wait_for_dataform_iam" {
   create_duration = "60s"
 
   depends_on = [
     google_service_account_iam_member.dataform_runner_sa_user,
     google_service_account_iam_member.dataform_runner_sa_token_creator,
-    google_service_account_iam_member.developer_sa_user
+    google_service_account_iam_member.developer_sa_user,
+    google_service_account_iam_member.elt_runner_dataform_sa_user
   ]
 }
 
