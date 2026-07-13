@@ -106,6 +106,10 @@
   "f63a2125-6796-4686-b0ea-b51b419b2458": {
     "title": "Update player mapping and truncate table in backfill Walkthrough",
     "source": "specs/coc-elt_20260713_update-backfill-mapping_walkthrough.md"
+  },
+  "541c05e5-6aef-46f1-87d2-904a5438b101": {
+    "title": "Resolve scripts module import error in Cloud Build Walkthrough",
+    "source": "specs/coc-elt_20260713_resolve-scripts-import-error_walkthrough.md"
   }
 }
 

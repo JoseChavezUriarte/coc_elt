@@ -1,13 +1,16 @@
 import json
 import os
 import subprocess
+import sys
 from datetime import datetime, timezone
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 from bson import ObjectId
 from google.cloud import bigquery
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.backfill_from_mongo import (
     clean_mongo_doc,
     extract_archive,
