@@ -69,7 +69,7 @@ This document walks through the modifications made to the GCP Workflow configura
           next: raise_dataform_error
       next: wait_dataform
   - raise_dataform_error:
-      raise: $${"Dataform workflow invocation " + df_status.body.name + " finished with state: " + df_status.body.state}
+      raise: '$${"Dataform workflow invocation " + df_status.body.name + " finished with state: " + df_status.body.state}'
   - return_result:
       return: $${df_status.body}
   ```
@@ -195,7 +195,7 @@ Terraform will perform the following actions:
           +             next: raise_dataform_error
           +         next: wait_dataform
           +     - raise_dataform_error:
-          +         raise: ${"Dataform workflow invocation " + df_status.body.name + " finished with state: " + df_status.body.state}
+          +         raise: '${"Dataform workflow invocation " + df_status.body.name + " finished with state: " + df_status.body.state}'
                 - return_result:
           -         return: ${df_invocation.body}
           +         return: ${df_status.body}

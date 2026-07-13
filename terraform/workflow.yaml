@@ -65,6 +65,6 @@ main:
             next: raise_dataform_error
         next: wait_dataform
     - raise_dataform_error:
-        raise: $${"Dataform workflow invocation " + df_status.body.name + " finished with state: " + df_status.body.state}
+        raise: '$${"Dataform workflow invocation " + df_status.body.name + " finished with state: " + df_status.body.state}'
     - return_result:
         return: $${df_status.body}
