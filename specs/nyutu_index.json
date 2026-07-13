@@ -130,6 +130,10 @@
   "e1f3a6cb-b8ba-4b8b-8705-40e1e37bfa05": {
     "title": "Resolve 403 Permission Denied in run_dataform GCP Workflow Step Walkthrough",
     "source": "specs/coc-elt_20260713_resolve-workflow-dataform-403_walkthrough.md"
+  },
+  "ce8c7de6-ff6a-4352-a980-6eef581a12d2": {
+    "title": "Resolve 404 Not Found in run_dataform GCP Workflow Step Walkthrough",
+    "source": "specs/coc-elt_20260713_resolve-workflow-dataform-404_walkthrough.md"
   }
 }
 

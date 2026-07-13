@@ -24,7 +24,18 @@ main:
         switch:
           - condition: $${"error" in op_status}
             raise: $${op_status.error}
-        next: run_dataform
+        next: compile_dataform
+    - compile_dataform:
+        call: http.post
+        args:
+          url: https://dataform.googleapis.com/v1beta1/projects/${data_project_id}/locations/${region}/repositories/coc-elt/compilationResults
+          auth:
+            type: OAuth2
+          body:
+            gitCommitish: "main"
+            codeCompilationConfig:
+              defaultDatabase: "${data_project_id}"
+        result: compilation
     - run_dataform:
         call: http.post
         args:
@@ -32,7 +43,28 @@ main:
           auth:
             type: OAuth2
           body:
-            compilationResult: projects/${data_project_id}/locations/${region}/repositories/coc-elt/compilationResults/main
+            compilationResult: $${compilation.body.name}
         result: df_invocation
+    - wait_dataform:
+        call: sys.sleep
+        args:
+          seconds: 15
+        next: get_dataform_status
+    - get_dataform_status:
+        call: http.get
+        args:
+          url: https://dataform.googleapis.com/v1beta1/$${df_invocation.body.name}
+          auth:
+            type: OAuth2
+        result: df_status
+    - check_dataform_status:
+        switch:
+          - condition: $${df_status.body.state == "SUCCEEDED"}
+            next: return_result
+          - condition: $${df_status.body.state == "FAILED" or df_status.body.state == "CANCELLED"}
+            next: raise_dataform_error
+        next: wait_dataform
+    - raise_dataform_error:
+        raise: $${"Dataform workflow invocation " + df_status.body.name + " finished with state: " + df_status.body.state}
     - return_result:
-        return: $${df_invocation.body}
+        return: $${df_status.body}
