@@ -118,6 +118,10 @@
   "b6cfaac9-d2db-476b-971a-0dc2eb1f11ec": {
     "title": "Historical MongoDB Data Backfill Walkthrough for coc_league_group Table",
     "source": "specs/coc-elt_20260713_backfill-league-group_walkthrough.md"
+  },
+  "59fd928e-ea39-4afc-8f4d-2c78cc8b0cd8": {
+    "title": "Daily Incremental Upsert Model clan_members in Dataform Walkthrough",
+    "source": "specs/coc-elt_20260713_clan-members_walkthrough.md"
   }
 }
 

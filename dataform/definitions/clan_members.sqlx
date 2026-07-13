@@ -1,0 +1,33 @@
+config {
+  type: "incremental",
+  schema: "coc_silver",
+  uniqueKey: ["extracted_date", "ptag"],
+  bigquery: {
+    partitionBy: "extracted_date",
+    clusterBy: ["ptag", "role"],
+    updatePartitionFilter: "extracted_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)"
+  },
+  assertions: {
+    uniqueKey: ["extracted_date", "ptag"],
+    nonNull: ["extracted_date", "ptag"]
+  }
+}
+
+SELECT
+  DATE(extracted_at) AS extracted_date,
+  JSON_VALUE(payload.tag) AS ptag,
+  JSON_VALUE(payload.name) AS pname,
+  JSON_VALUE(payload.role) AS role,
+  SAFE_CAST(JSON_VALUE(payload.expLevel) AS INT64) AS exp_level,
+  SAFE_CAST(JSON_VALUE(payload.trophies) AS INT64) AS trophies,
+  SAFE_CAST(JSON_VALUE(payload.warStars) AS INT64) AS war_stars,
+  SAFE_CAST(JSON_VALUE(payload.townHallLevel) AS INT64) AS thl,
+  SAFE_CAST(JSON_VALUE(payload.builderHallLevel) AS INT64) AS bhl,
+  SAFE_CAST(JSON_VALUE(payload.clanCapitalContributions) AS INT64) AS capital_contrib,
+  COALESCE(
+    SAFE_CAST(JSON_VALUE(payload.builderBaseTrophies) AS INT64),
+    SAFE_CAST(JSON_VALUE(payload.versusTrophies) AS INT64)
+  ) AS btrophies
+FROM
+  ${ref("coc_members")}
+${when(incremental(), "WHERE extracted_at >= TIMESTAMP(DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY))")}
