@@ -42,9 +42,6 @@ class CocApiClient:
     def fetch_clan(self) -> Dict[str, Any]:
         return self._get(f"clans/{self.clan_tag}")
 
-    def fetch_members(self) -> Dict[str, Any]:
-        return self._get(f"clans/{self.clan_tag}/members")
-
     def fetch_current_war(self) -> Optional[Dict[str, Any]]:
         """
         Fetches current war details. Returns None if state is 'notInWar'.
