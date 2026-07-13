@@ -94,6 +94,10 @@
   "f0f3e79d-c101-4c6a-a387-907990664712": {
     "title": "Generate GCP ELT Architecture Diagram Walkthrough",
     "source": "specs/coc_elt_20260712_generate_infra_walkthrough.md"
+  },
+  "e3d82f32-fc1e-49d8-9b16-fde314b1e31a": {
+    "title": "Historical MongoDB Data Backfill Walkthrough",
+    "source": "specs/coc-elt_20260713_backfill-from-mongo_walkthrough.md"
   }
 }
 
