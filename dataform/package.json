@@ -2,5 +2,8 @@
   "name": "coc-elt-dataform",
   "dependencies": {
     "@dataform/core": "2.9.0"
+  },
+  "devDependencies": {
+    "@dataform/cli": "2.9.0"
   }
 }
