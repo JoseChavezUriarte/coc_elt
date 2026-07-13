@@ -102,6 +102,10 @@
   "66deb950-9317-4a81-9feb-0b57895fc29b": {
     "title": "Bronze Tables, Player and League Group/War Endpoints and Pipeline Steps Walkthrough",
     "source": "specs/coc_elt_20260713_add-bronze-tables-and-endpoints_walkthrough.md"
+  },
+  "f63a2125-6796-4686-b0ea-b51b419b2458": {
+    "title": "Update player mapping and truncate table in backfill Walkthrough",
+    "source": "specs/coc-elt_20260713_update-backfill-mapping_walkthrough.md"
   }
 }
 

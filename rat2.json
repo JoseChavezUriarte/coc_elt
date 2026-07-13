@@ -1,14 +1,21 @@
 {
-  "builderBaseLeague": { "id": 44000018, "name": "Copper League II" },
-  "builderBaseTrophies": 1878,
+  "builderBaseLeague": { "id": 44000003, "name": "Wood League II" },
+  "builderBaseTrophies": 338,
   "donations": 0,
   "donationsReceived": 0,
-  "expLevel": 129,
+  "expLevel": 50,
   "league": null,
-  "name": "angelbaderio",
-  "playerHouse": null,
+  "name": "Ale pro",
+  "playerHouse": {
+    "elements": [
+      { "id": 82000000, "type": "ground" },
+      { "id": 82000048, "type": "walls" },
+      { "id": 82000010, "type": "roof" },
+      { "id": 82000060, "type": "decoration" }
+    ]
+  },
   "role": "member",
-  "tag": "#P8GP2PUJ",
-  "townHallLevel": 11,
-  "trophies": 1694
+  "tag": "#G8VPV9YUC",
+  "townHallLevel": 8,
+  "trophies": 585
 }

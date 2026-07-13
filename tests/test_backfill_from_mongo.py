@@ -137,21 +137,28 @@ def test_load_table_data():
         {"extracted_at": "2026-07-13T12:00:00+00:00", "payload": {"foo": "bar"}}
     ]
     
-    captured_data = []
+    captured_jobs = []
     def mock_load(file_obj, table_id, job_config):
         content = file_obj.read()
-        captured_data.append(content)
+        captured_jobs.append((content, job_config))
         return mock_job
         
     mock_bq_client.load_table_from_file.side_effect = mock_load
     
+    # 1. Default write disposition
     load_table_data(mock_bq_client, "project.dataset.table", rows)
+    assert mock_bq_client.load_table_from_file.call_count == 1
+    assert captured_jobs[0][1].write_disposition == bigquery.WriteDisposition.WRITE_APPEND
     
-    mock_bq_client.load_table_from_file.assert_called_once()
-    assert len(captured_data) == 1
-    parsed = json.loads(captured_data[0].decode("utf-8").strip())
-    assert parsed["extracted_at"] == "2026-07-13T12:00:00+00:00"
-    assert parsed["payload"] == {"foo": "bar"}
+    # 2. Custom write disposition
+    load_table_data(
+        mock_bq_client, 
+        "project.dataset.table", 
+        rows, 
+        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE
+    )
+    assert mock_bq_client.load_table_from_file.call_count == 2
+    assert captured_jobs[1][1].write_disposition == bigquery.WriteDisposition.WRITE_TRUNCATE
 
 # Test process_and_backfill mapping logic
 def test_process_and_backfill_mapping():
@@ -212,7 +219,10 @@ def test_process_and_backfill_mapping():
     loaded_data = {}
     def mock_load(file_obj, table_id, job_config):
         content = file_obj.read()
-        loaded_data[table_id] = [json.loads(line) for line in content.decode("utf-8").strip().split("\n") if line]
+        loaded_data[table_id] = {
+            "rows": [json.loads(line) for line in content.decode("utf-8").strip().split("\n") if line],
+            "write_disposition": job_config.write_disposition if job_config else None
+        }
         mock_job = MagicMock()
         mock_job.errors = None
         return mock_job
@@ -223,36 +233,115 @@ def test_process_and_backfill_mapping():
 
     # Validate coc_clan
     assert "test-project.test_dataset.coc_clan" in loaded_data
-    clan_loaded = loaded_data["test-project.test_dataset.coc_clan"]
+    clan_loaded = loaded_data["test-project.test_dataset.coc_clan"]["rows"]
+    clan_wd = loaded_data["test-project.test_dataset.coc_clan"]["write_disposition"]
     assert len(clan_loaded) == 1
     assert clan_loaded[0]["extracted_at"] == "2026-07-13T12:00:00+00:00"
     assert clan_loaded[0]["payload"]["tag"] == "#CLAN1"
     assert "players" not in clan_loaded[0]["payload"]
     assert "_id" not in clan_loaded[0]["payload"]
+    assert clan_wd == bigquery.WriteDisposition.WRITE_APPEND
     
     # Validate coc_members
     assert "test-project.test_dataset.coc_members" in loaded_data
-    members_loaded = loaded_data["test-project.test_dataset.coc_members"]
+    members_loaded = loaded_data["test-project.test_dataset.coc_members"]["rows"]
+    members_wd = loaded_data["test-project.test_dataset.coc_members"]["write_disposition"]
     assert len(members_loaded) == 1
     assert members_loaded[0]["extracted_at"] == "2026-07-13T12:00:00+00:00"
     assert members_loaded[0]["payload"]["tag"] == "#PLAYER1"
     assert members_loaded[0]["payload"]["name"] == "Test Player"
     assert members_loaded[0]["payload"]["role"] == "member"
     assert members_loaded[0]["payload"]["townHallLevel"] == 14
-    assert "extra_field" not in members_loaded[0]["payload"]
+    # Verify that the entire player profile payload (no whitelist) is mapped
+    assert members_loaded[0]["payload"]["extra_field"] == "discard"
+    assert members_wd == bigquery.WriteDisposition.WRITE_TRUNCATE
     
     # Validate coc_current_war
     assert "test-project.test_dataset.coc_current_war" in loaded_data
-    war_loaded = loaded_data["test-project.test_dataset.coc_current_war"]
+    war_loaded = loaded_data["test-project.test_dataset.coc_current_war"]["rows"]
+    war_wd = loaded_data["test-project.test_dataset.coc_current_war"]["write_disposition"]
     assert len(war_loaded) == 1
     assert war_loaded[0]["extracted_at"] == "2026-07-13T12:00:00+00:00"
     assert war_loaded[0]["payload"]["war_id"] == "war123"
     assert "_id" not in war_loaded[0]["payload"]
+    assert war_wd == bigquery.WriteDisposition.WRITE_APPEND
     
     # Validate coc_capital_raids
     assert "test-project.test_dataset.coc_capital_raids" in loaded_data
-    raid_loaded = loaded_data["test-project.test_dataset.coc_capital_raids"]
+    raid_loaded = loaded_data["test-project.test_dataset.coc_capital_raids"]["rows"]
+    raid_wd = loaded_data["test-project.test_dataset.coc_capital_raids"]["write_disposition"]
     assert len(raid_loaded) == 1
     assert raid_loaded[0]["extracted_at"] == "2026-07-13T12:00:00+00:00"
     assert raid_loaded[0]["payload"]["raid_id"] == "raid123"
     assert "_id" not in raid_loaded[0]["payload"]
+    assert raid_wd == bigquery.WriteDisposition.WRITE_APPEND
+
+def test_process_and_backfill_table_filtering():
+    mock_mongo = MagicMock()
+    mock_bq = MagicMock()
+    
+    mock_mongo.list_database_names.return_value = ["coc_db"]
+    mock_db = MagicMock()
+    mock_mongo.__getitem__.return_value = mock_db
+    mock_db.list_collection_names.return_value = ["clan", "warlog", "capital_raids"]
+    
+    mock_clan_col = MagicMock()
+    mock_warlog_col = MagicMock()
+    mock_raids_col = MagicMock()
+    
+    collections_map = {
+        "clan": mock_clan_col,
+        "warlog": mock_warlog_col,
+        "capital_raids": mock_raids_col
+    }
+    mock_db.__getitem__.side_effect = lambda key: collections_map[key]
+    
+    dt = datetime(2026, 7, 13, 12, 0, 0, tzinfo=timezone.utc)
+    clan_doc = {
+        "_id": ObjectId("64afe3108c4e402ea29b8c00"),
+        "extracted_at": dt,
+        "tag": "#CLAN1",
+        "name": "Test Clan",
+        "players": [
+            {
+                "tag": "#PLAYER1",
+                "name": "Test Player",
+                "role": "member",
+                "townHallLevel": 14,
+            }
+        ]
+    }
+    
+    mock_clan_col.find.return_value = [clan_doc]
+    
+    loaded_data = {}
+    def mock_load(file_obj, table_id, job_config):
+        content = file_obj.read()
+        loaded_data[table_id] = {
+            "rows": [json.loads(line) for line in content.decode("utf-8").strip().split("\n") if line],
+            "write_disposition": job_config.write_disposition if job_config else None
+        }
+        mock_job = MagicMock()
+        mock_job.errors = None
+        return mock_job
+        
+    mock_bq.load_table_from_file.side_effect = mock_load
+    
+    # Run only for coc_members
+    process_and_backfill(mock_mongo, mock_bq, "test-project", "test_dataset", table="coc_members")
+    
+    # Verify that ONLY coc_members is loaded, and write_disposition is WRITE_TRUNCATE
+    assert "test-project.test_dataset.coc_clan" not in loaded_data
+    assert "test-project.test_dataset.coc_current_war" not in loaded_data
+    assert "test-project.test_dataset.coc_capital_raids" not in loaded_data
+    assert "test-project.test_dataset.coc_members" in loaded_data
+    
+    members_loaded = loaded_data["test-project.test_dataset.coc_members"]["rows"]
+    members_wd = loaded_data["test-project.test_dataset.coc_members"]["write_disposition"]
+    assert len(members_loaded) == 1
+    assert members_loaded[0]["payload"]["tag"] == "#PLAYER1"
+    assert members_wd == bigquery.WriteDisposition.WRITE_TRUNCATE
+    
+    # Ensure warlog and capital_raids find was NEVER called
+    mock_warlog_col.find.assert_not_called()
+    mock_raids_col.find.assert_not_called()

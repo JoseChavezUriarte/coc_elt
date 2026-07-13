@@ -134,7 +134,12 @@ def stop_and_remove_container(container_id: str) -> None:
     logger.info("Removing container '%s'...", container_id)
     subprocess.run(["docker", "rm", container_id], capture_output=True)
 
-def load_table_data(bq_client: bigquery.Client, table_id: str, rows: List[Dict[str, Any]]) -> None:
+def load_table_data(
+    bq_client: bigquery.Client,
+    table_id: str,
+    rows: List[Dict[str, Any]],
+    write_disposition: str = bigquery.WriteDisposition.WRITE_APPEND
+) -> None:
     """Loads transformed records into a BigQuery table using a single load_table_from_file job."""
     if not rows:
         logger.info("No rows to load for table %s", table_id)
@@ -151,7 +156,7 @@ def load_table_data(bq_client: bigquery.Client, table_id: str, rows: List[Dict[s
             
             job_config = bigquery.LoadJobConfig(
                 source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON,
-                write_disposition=bigquery.WriteDisposition.WRITE_APPEND
+                write_disposition=write_disposition
             )
             
             with open(tmp_file_path, 'rb') as file_obj:
@@ -175,7 +180,8 @@ def process_and_backfill(
     mongo_client: MongoClient,
     bq_client: bigquery.Client,
     project_id: str,
-    dataset_id: str
+    dataset_id: str,
+    table: str = "all"
 ) -> None:
     """Discovers the database and processes all Clash of Clans collections,
     then loads the mapped data into BigQuery.
@@ -202,41 +208,49 @@ def process_and_backfill(
     cols = db.list_collection_names()
     
     # Process 'clan' collection
-    if 'clan' in cols:
+    if 'clan' in cols and table in ("all", "coc_clan", "coc_members"):
         clan_rows: List[Dict[str, Any]] = []
         member_rows: List[Dict[str, Any]] = []
-        keys_to_keep = [
-            'tag', 'name', 'role', 'townHallLevel', 'expLevel', 'league',
-            'trophies', 'builderBaseTrophies', 'clanRank', 'previousClanRank',
-            'donations', 'donationsReceived', 'playerHouse', 'builderBaseLeague'
-        ]
         
         logger.info("Processing collection 'clan'...")
         for doc in db['clan'].find():
             extracted_at_str = get_extracted_at(doc).isoformat()
             
             # coc_clan table payload: strip _id and players
-            clan_payload = {k: v for k, v in doc.items() if k not in ("_id", "players")}
-            clan_rows.append({
-                "extracted_at": extracted_at_str,
-                "payload": clean_mongo_doc(clan_payload)
-            })
+            if table in ("all", "coc_clan"):
+                clan_payload = {k: v for k, v in doc.items() if k not in ("_id", "players")}
+                clan_rows.append({
+                    "extracted_at": extracted_at_str,
+                    "payload": clean_mongo_doc(clan_payload)
+                })
             
             # coc_members table payload: process players array
-            players = doc.get("players")
-            if isinstance(players, list):
-                for player in players:
-                    player_payload = {k: player[k] for k in keys_to_keep if k in player}
-                    member_rows.append({
-                        "extracted_at": extracted_at_str,
-                        "payload": clean_mongo_doc(player_payload)
-                    })
+            if table in ("all", "coc_members"):
+                players = doc.get("players")
+                if isinstance(players, list):
+                    for player in players:
+                        member_rows.append({
+                            "extracted_at": extracted_at_str,
+                            "payload": clean_mongo_doc(player)
+                        })
                     
-        load_table_data(bq_client, f"{project_id}.{dataset_id}.coc_clan", clan_rows)
-        load_table_data(bq_client, f"{project_id}.{dataset_id}.coc_members", member_rows)
+        if table in ("all", "coc_clan"):
+            load_table_data(
+                bq_client,
+                f"{project_id}.{dataset_id}.coc_clan",
+                clan_rows,
+                write_disposition=bigquery.WriteDisposition.WRITE_APPEND
+            )
+        if table in ("all", "coc_members"):
+            load_table_data(
+                bq_client,
+                f"{project_id}.{dataset_id}.coc_members",
+                member_rows,
+                write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE
+            )
         
     # Process 'warlog' collection
-    if 'warlog' in cols:
+    if 'warlog' in cols and table in ("all", "coc_current_war"):
         warlog_rows: List[Dict[str, Any]] = []
         logger.info("Processing collection 'warlog'...")
         for doc in db['warlog'].find():
@@ -246,10 +260,15 @@ def process_and_backfill(
                 "extracted_at": extracted_at_str,
                 "payload": clean_mongo_doc(war_payload)
             })
-        load_table_data(bq_client, f"{project_id}.{dataset_id}.coc_current_war", warlog_rows)
+        load_table_data(
+            bq_client,
+            f"{project_id}.{dataset_id}.coc_current_war",
+            warlog_rows,
+            write_disposition=bigquery.WriteDisposition.WRITE_APPEND
+        )
         
     # Process 'capital_raids' collection
-    if 'capital_raids' in cols:
+    if 'capital_raids' in cols and table in ("all", "coc_capital_raids"):
         raids_rows: List[Dict[str, Any]] = []
         logger.info("Processing collection 'capital_raids'...")
         for doc in db['capital_raids'].find():
@@ -259,7 +278,12 @@ def process_and_backfill(
                 "extracted_at": extracted_at_str,
                 "payload": clean_mongo_doc(raids_payload)
             })
-        load_table_data(bq_client, f"{project_id}.{dataset_id}.coc_capital_raids", raids_rows)
+        load_table_data(
+            bq_client,
+            f"{project_id}.{dataset_id}.coc_capital_raids",
+            raids_rows,
+            write_disposition=bigquery.WriteDisposition.WRITE_APPEND
+        )
 
 def main() -> None:
     setup_logging()
@@ -286,6 +310,11 @@ def main() -> None:
         "--mongo-image",
         default="mongo:latest",
         help="Docker image for MongoDB container."
+    )
+    parser.add_argument(
+        "--table",
+        default="all",
+        help="Specific target table to backfill (e.g. coc_members), or 'all' to process all tables."
     )
     
     args = parser.parse_args()
@@ -331,7 +360,8 @@ def main() -> None:
             mongo_client=mongo_client,
             bq_client=bq_client,
             project_id=args.project_id,
-            dataset_id=args.dataset_id
+            dataset_id=args.dataset_id,
+            table=args.table
         )
         
         logger.info("MongoDB backfill process finished successfully.")
