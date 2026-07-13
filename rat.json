@@ -1,0 +1,38 @@
+{
+  "builderBaseLeague": { "id": 44000028, "name": "Steel League I" },
+  "builderBaseTrophies": 3695,
+  "clanRank": 2,
+  "donations": 215,
+  "donationsReceived": 174,
+  "expLevel": 206,
+  "league": {
+    "iconUrls": {
+      "small": "https://api-assets.clashofclans.com/leagues/72/e--YMyIexEQQhE4imLoJcwhYn6Uy8KqlgyY3_kFV6t4.png",
+      "tiny": "https://api-assets.clashofclans.com/leagues/36/e--YMyIexEQQhE4imLoJcwhYn6Uy8KqlgyY3_kFV6t4.png"
+    },
+    "id": 29000000,
+    "name": "Unranked"
+  },
+  "leagueTier": {
+    "iconUrls": {
+      "large": "https://api-assets.clashofclans.com/leaguetiers/326/yIfqSgrhiYRcuMbAPCoeCj1FTmfylCLxnrAljEZc8K0.png",
+      "small": "https://api-assets.clashofclans.com/leaguetiers/125/yIfqSgrhiYRcuMbAPCoeCj1FTmfylCLxnrAljEZc8K0.png"
+    },
+    "id": 105000026,
+    "name": "Titan League 26"
+  },
+  "name": "Logan",
+  "playerHouse": {
+    "elements": [
+      { "id": 82000000, "type": "ground" },
+      { "id": 82000048, "type": "walls" },
+      { "id": 82000032, "type": "roof" },
+      { "id": 82000058, "type": "decoration" }
+    ]
+  },
+  "previousClanRank": 2,
+  "role": "coLeader",
+  "tag": "#8GY2G0L0G",
+  "townHallLevel": 18,
+  "trophies": 0
+}

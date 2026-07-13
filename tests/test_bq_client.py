@@ -1,7 +1,7 @@
 import pytest
 import json
 from datetime import datetime, timezone
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, ANY
 from coc_elt.bq_client import BigQueryIngester
 
 @patch("google.cloud.bigquery.Client")
@@ -102,3 +102,29 @@ def test_ingest_batch_load_job_errors(mock_bq_client_cls):
     with pytest.raises(RuntimeError, match="BigQuery load job failed with errors"):
         ingester.ingest_batch("coc_clan", [{"key": "val"}], dt)
     mock_bq_client_cls.assert_called_once_with(project="test-project")
+
+@patch("google.cloud.bigquery.Client")
+def test_ingest_batch_new_tables(mock_bq_client_cls):
+    mock_bq_client = MagicMock()
+    mock_bq_client_cls.return_value = mock_bq_client
+    
+    mock_job = MagicMock()
+    mock_job.errors = None
+    mock_bq_client.load_table_from_file.return_value = mock_job
+
+    ingester = BigQueryIngester(project_id="test-project", dataset_id="test_dataset")
+    dt = datetime(2026, 7, 11, 12, 0, 0, tzinfo=timezone.utc)
+    
+    ingester.ingest_batch("coc_league_group", [{"state": "inWar", "season": "2026-07"}], dt)
+    mock_bq_client.load_table_from_file.assert_called_with(
+        ANY,
+        "test-project.test_dataset.coc_league_group",
+        job_config=ANY
+    )
+    
+    ingester.ingest_batch("coc_warleague_war", [{"state": "warEnded"}], dt)
+    mock_bq_client.load_table_from_file.assert_called_with(
+        ANY,
+        "test-project.test_dataset.coc_warleague_war",
+        job_config=ANY
+    )

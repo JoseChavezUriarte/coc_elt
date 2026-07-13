@@ -60,3 +60,19 @@ class CocApiClient:
 
     def fetch_capital_raids(self) -> Dict[str, Any]:
         return self._get(f"clans/{self.clan_tag}/capitalraidseasons")
+
+    def fetch_player(self, player_tag: str) -> Dict[str, Any]:
+        encoded_player_tag = urllib.parse.quote(player_tag)
+        return self._get(f"players/{encoded_player_tag}")
+
+    def fetch_league_group(self) -> Optional[Dict[str, Any]]:
+        try:
+            return self._get(f"clans/{self.clan_tag}/currentwar/leaguegroup")
+        except requests.HTTPError as e:
+            if e.response is not None and e.response.status_code == 404:
+                return None
+            raise
+
+    def fetch_warleague_war(self, war_tag: str) -> Dict[str, Any]:
+        encoded_war_tag = urllib.parse.quote(war_tag)
+        return self._get(f"clanwarleagues/wars/{encoded_war_tag}")

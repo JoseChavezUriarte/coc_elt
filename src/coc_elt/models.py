@@ -44,3 +44,12 @@ class CapitalRaidListResponse(BaseModel):
     @classmethod
     def validate_envelope(cls, data: Any) -> Any:
         return normalize_envelope(data)
+
+class LeagueGroupRecord(BaseModel):
+    model_config = ConfigDict(extra='allow')
+    state: str
+    season: str
+
+class WarLeagueWarRecord(BaseModel):
+    model_config = ConfigDict(extra='allow')
+    state: str

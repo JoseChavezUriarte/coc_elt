@@ -98,6 +98,10 @@
   "e3d82f32-fc1e-49d8-9b16-fde314b1e31a": {
     "title": "Historical MongoDB Data Backfill Walkthrough",
     "source": "specs/coc-elt_20260713_backfill-from-mongo_walkthrough.md"
+  },
+  "66deb950-9317-4a81-9feb-0b57895fc29b": {
+    "title": "Bronze Tables, Player and League Group/War Endpoints and Pipeline Steps Walkthrough",
+    "source": "specs/coc_elt_20260713_add-bronze-tables-and-endpoints_walkthrough.md"
   }
 }
 

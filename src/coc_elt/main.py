@@ -6,7 +6,7 @@ from coc_elt.config import settings
 from coc_elt.api_client import CocApiClient, is_capital_raid_day
 from coc_elt.bq_client import BigQueryIngester
 from coc_elt.logging_config import setup_logging
-from coc_elt.models import ClanRecord, MemberListResponse, WarRecord, CapitalRaidListResponse
+from coc_elt.models import ClanRecord, MemberRecord, MemberListResponse, WarRecord, CapitalRaidListResponse, LeagueGroupRecord, WarLeagueWarRecord
 
 setup_logging(logging.INFO)
 logger = logging.getLogger("coc_elt.main")
@@ -37,6 +37,8 @@ def run_pipeline() -> None:
         )
         raise e
 
+    clan_raw = None
+
     # 1. Clan Domain
     try:
         logger.info("Processing Clan domain", extra={"step": "domain_clan"})
@@ -51,10 +53,15 @@ def run_pipeline() -> None:
     # 2. Members Domain
     try:
         logger.info("Processing Members domain", extra={"step": "domain_members"})
-        members_raw = api_client.fetch_members()
-        members_val = MemberListResponse.model_validate(members_raw)
-        members_records = [m.model_dump(mode="json") for m in members_val.items]
-        ingester.ingest_batch("coc_members", members_records, now_utc)
+        current_clan_raw = clan_raw if clan_raw is not None else api_client.fetch_clan()
+        member_list = current_clan_raw.get("memberList", [])
+        validated_members = []
+        for member in member_list:
+            tag = member["tag"]
+            player_raw = api_client.fetch_player(tag)
+            player_val = MemberRecord.model_validate(player_raw)
+            validated_members.append(player_val.model_dump(mode="json"))
+        ingester.ingest_batch("coc_members", validated_members, now_utc)
     except ValidationError as e:
         logger.error("Validation failed for Members domain. Skipping ingestion.", exc_info=e)
     except Exception as e:
@@ -94,6 +101,35 @@ def run_pipeline() -> None:
             "Skipping Capital Raids extraction (Tuesday/Wednesday/Thursday in UTC).",
             extra={"step": "domain_raids", "reason": "weekday_schedule", "weekday": now_utc.weekday()}
         )
+
+    # 5. League Group & War League Domain
+    try:
+        logger.info("Processing League Group & War League domain", extra={"step": "domain_league_group"})
+        league_group_raw = api_client.fetch_league_group()
+        if league_group_raw is not None and "rounds" in league_group_raw:
+            league_group_val = LeagueGroupRecord.model_validate(league_group_raw)
+            ingester.ingest_batch("coc_league_group", [league_group_val.model_dump(mode="json")], now_utc)
+
+            validated_wars = []
+            for round_obj in league_group_raw.get("rounds", []):
+                for war_tag in round_obj.get("warTags", []):
+                    if war_tag == "#0":
+                        continue
+                    war_raw = api_client.fetch_warleague_war(war_tag)
+                    war_val = WarLeagueWarRecord.model_validate(war_raw)
+                    validated_wars.append(war_val.model_dump(mode="json"))
+            
+            if validated_wars:
+                ingester.ingest_batch("coc_warleague_war", validated_wars, now_utc)
+        else:
+            logger.info(
+                "Skipping League Group & War League ingestion as no active league group or rounds found.",
+                extra={"step": "domain_league_group"}
+            )
+    except ValidationError as e:
+        logger.error("Validation failed for League Group & War League domain. Skipping ingestion.", exc_info=e)
+    except Exception as e:
+        logger.error("Error processing League Group & War League domain. Skipping ingestion.", exc_info=e)
 
     logger.info(
         "ELT pipeline completed execution.",

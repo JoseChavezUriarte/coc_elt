@@ -8,7 +8,7 @@ resource "google_bigquery_dataset" "bronze" {
 }
 
 locals {
-  tables = ["clan", "members", "current_war", "capital_raids"]
+  tables = ["clan", "members", "current_war", "capital_raids", "league_group", "warleague_war"]
 }
 
 resource "google_bigquery_table" "tables" {
