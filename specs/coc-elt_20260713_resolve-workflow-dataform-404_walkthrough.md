@@ -1,7 +1,7 @@
 ---
 title: "Resolve 404 Not Found in run_dataform GCP Workflow Step Walkthrough"
 project_id: "coc-elt"
-nyutu_uuid: "ce8c7de6-ff6a-4352-a980-6eef581a12d2"
+nyutu_uuid: "7f63308a-e7f5-4114-a138-6b0d2e1f1f54"
 artifact_type: "Infrastructure Pattern"
 tags:
   - "terraform"
