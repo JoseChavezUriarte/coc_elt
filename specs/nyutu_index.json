@@ -154,6 +154,10 @@
   "c467dbcb-fa83-409f-820b-6612751d6615": {
     "title": "Resolve 404 Error in get_dataform_status GCP Workflow Step Walkthrough",
     "source": "specs/coc-elt_20260714_workflow-404-fix_walkthrough.md"
+  },
+  "3c0ae45e-3f59-43ff-a729-869fd452cbca": {
+    "title": "Resolve BigQuery Access Denied in Dataform Sources Walkthrough",
+    "source": "specs/coc-elt_20260714_resolve-bigquery-access-denied-sources_walkthrough.md"
   }
 }
 
