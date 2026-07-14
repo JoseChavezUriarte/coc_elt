@@ -185,6 +185,19 @@ resource "google_service_account_iam_member" "elt_runner_dataform_sa_user" {
   member             = "serviceAccount:${google_service_account.elt_runner.email}"
 }
 
+data "google_secret_manager_secret_version" "github_token_latest" {
+  project = var.compute_project_id
+  secret  = data.google_secret_manager_secret.github_token.secret_id
+  version = "latest"
+}
+
+resource "google_secret_manager_secret_iam_member" "dataform_secret_accessor" {
+  project   = var.compute_project_id
+  secret_id = data.google_secret_manager_secret.github_token.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:service-${data.google_project.data_project.number}@gcp-sa-dataform.iam.gserviceaccount.com"
+}
+
 resource "time_sleep" "wait_for_dataform_iam" {
   create_duration = "60s"
 
@@ -192,7 +205,8 @@ resource "time_sleep" "wait_for_dataform_iam" {
     google_service_account_iam_member.dataform_runner_sa_user,
     google_service_account_iam_member.dataform_runner_sa_token_creator,
     google_service_account_iam_member.developer_sa_user,
-    google_service_account_iam_member.elt_runner_dataform_sa_user
+    google_service_account_iam_member.elt_runner_dataform_sa_user,
+    google_secret_manager_secret_iam_member.dataform_secret_accessor
   ]
 }
 

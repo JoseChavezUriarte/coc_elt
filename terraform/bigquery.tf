@@ -43,6 +43,12 @@ resource "google_dataform_repository" "coc_elt" {
   name            = "coc-elt"
   service_account = google_service_account.dataform_runner.email
 
+  git_remote_settings {
+    url                                 = var.github_repository_url
+    default_branch                      = "main"
+    authentication_token_secret_version = data.google_secret_manager_secret_version.github_token_latest.name
+  }
+
   depends_on = [
     time_sleep.wait_for_dataform_iam
   ]

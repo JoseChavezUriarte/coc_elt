@@ -134,6 +134,10 @@
   "7f63308a-e7f5-4114-a138-6b0d2e1f1f54": {
     "title": "Resolve 404 Not Found in run_dataform GCP Workflow Step Walkthrough",
     "source": "specs/coc-elt_20260713_resolve-workflow-dataform-404_walkthrough.md"
+  },
+  "32f87163-b75c-4667-ba4e-2e699d55d030": {
+    "title": "Resolve 400 Bad Request in compile_dataform GCP Workflow Step Walkthrough",
+    "source": "specs/coc-elt_20260713_resolve-dataform-400-error_walkthrough.md"
   }
 }
 
