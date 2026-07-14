@@ -162,6 +162,10 @@
   "60b7622c-1643-4280-b2b5-8e609d7bb04f": {
     "title": "Update Architecture Diagram Script Walkthrough",
     "source": "specs/coc-elt_20260714_update-infra-diagram_walkthrough.md"
+  },
+  "990b593b-255e-4eed-8029-243d49262e28": {
+    "title": "Color Infrastructure Diagram Edges and Update Scheduler Label Walkthrough",
+    "source": "specs/coc-elt_20260714_color-infra-diagram-edges_walkthrough.md"
   }
 }
 
