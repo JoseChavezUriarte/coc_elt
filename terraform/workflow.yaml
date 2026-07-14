@@ -53,7 +53,7 @@ main:
     - get_dataform_status:
         call: http.get
         args:
-          url: https://dataform.googleapis.com/v1beta1/$${df_invocation.body.name}
+          url: '$${"https://dataform.googleapis.com/v1beta1/" + df_invocation.body.name}'
           auth:
             type: OAuth2
         result: df_status

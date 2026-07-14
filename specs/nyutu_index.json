@@ -150,6 +150,10 @@
   "2446725b-e34d-4274-b7da-dc565c7b5691": {
     "title": "Filter Duplicate Clan Members and Retrieve Latest Daily Update Walkthrough",
     "source": "specs/coc-elt_20260714_filter-clan-members-duplicates_walkthrough.md"
+  },
+  "c467dbcb-fa83-409f-820b-6612751d6615": {
+    "title": "Resolve 404 Error in get_dataform_status GCP Workflow Step Walkthrough",
+    "source": "specs/coc-elt_20260714_workflow-404-fix_walkthrough.md"
   }
 }
 
