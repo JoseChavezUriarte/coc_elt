@@ -1,7 +1,7 @@
 ---
 title: "Resolve BigQuery Access Denied in Dataform Sources Walkthrough"
 project_id: "coc-elt"
-nyutu_uuid: "3c0ae45e-3f59-43ff-a729-869fd452cbca"
+nyutu_uuid: "40c706c4-976b-436c-9a50-b445ece90449"
 artifact_type: "Bug Fix Logic"
 tags:
   - "dataform"
