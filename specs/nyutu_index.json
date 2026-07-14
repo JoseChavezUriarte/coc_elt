@@ -142,6 +142,10 @@
   "5287d2d5-5a30-4194-98a2-a26fe92e149c": {
     "title": "Relocate Dataform Configuration and Configure Compiler Walkthrough",
     "source": "specs/coc-elt_20260713_move-dataform-to-root_walkthrough.md"
+  },
+  "2e6bf103-f16d-48f3-bab1-a30aee504354": {
+    "title": "Relocate Dataform definitions Folder to Root Walkthrough",
+    "source": "specs/coc-elt_20260714_relocate-definitions-to-root_walkthrough.md"
   }
 }
 
