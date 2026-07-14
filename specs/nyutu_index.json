@@ -166,6 +166,10 @@
   "990b593b-255e-4eed-8029-243d49262e28": {
     "title": "Color Infrastructure Diagram Edges and Update Scheduler Label Walkthrough",
     "source": "specs/coc-elt_20260714_color-infra-diagram-edges_walkthrough.md"
+  },
+  "c3eea545-1f9c-4310-aea4-14231f27a8f5": {
+    "title": "Soft Background Colors for Infrastructure clusters and Gray Edges Walkthrough",
+    "source": "specs/coc-elt_20260714_soft-cluster-colors_walkthrough.md"
   }
 }
 
