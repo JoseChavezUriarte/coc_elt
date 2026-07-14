@@ -158,6 +158,10 @@
   "40c706c4-976b-436c-9a50-b445ece90449": {
     "title": "Resolve BigQuery Access Denied in Dataform Sources Walkthrough",
     "source": "specs/coc-elt_20260714_resolve-bigquery-access-denied-sources_walkthrough.md"
+  },
+  "60b7622c-1643-4280-b2b5-8e609d7bb04f": {
+    "title": "Update Architecture Diagram Script Walkthrough",
+    "source": "specs/coc-elt_20260714_update-infra-diagram_walkthrough.md"
   }
 }
 
