@@ -13,21 +13,50 @@ config {
   }
 }
 
+WITH parsed_members AS (
+  SELECT
+    extracted_at,
+    DATE(extracted_at) AS extracted_date,
+    JSON_VALUE(payload.tag) AS ptag,
+    JSON_VALUE(payload.name) AS pname,
+    JSON_VALUE(payload.role) AS role,
+    SAFE_CAST(JSON_VALUE(payload.expLevel) AS INT64) AS exp_level,
+    SAFE_CAST(JSON_VALUE(payload.trophies) AS INT64) AS trophies,
+    SAFE_CAST(JSON_VALUE(payload.warStars) AS INT64) AS war_stars,
+    SAFE_CAST(JSON_VALUE(payload.townHallLevel) AS INT64) AS thl,
+    SAFE_CAST(JSON_VALUE(payload.builderHallLevel) AS INT64) AS bhl,
+    SAFE_CAST(JSON_VALUE(payload.clanCapitalContributions) AS INT64) AS capital_contrib,
+    COALESCE(
+      SAFE_CAST(JSON_VALUE(payload.builderBaseTrophies) AS INT64),
+      SAFE_CAST(JSON_VALUE(payload.versusTrophies) AS INT64)
+    ) AS btrophies
+  FROM
+    ${ref("coc_members")}
+  ${when(incremental(), "WHERE extracted_at >= TIMESTAMP(DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY))")}
+),
+
+ranked_members AS (
+  SELECT
+    *,
+    ROW_NUMBER() OVER (PARTITION BY extracted_date, ptag ORDER BY extracted_at DESC) AS row_num
+  FROM
+    parsed_members
+)
+
 SELECT
-  DATE(extracted_at) AS extracted_date,
-  JSON_VALUE(payload.tag) AS ptag,
-  JSON_VALUE(payload.name) AS pname,
-  JSON_VALUE(payload.role) AS role,
-  SAFE_CAST(JSON_VALUE(payload.expLevel) AS INT64) AS exp_level,
-  SAFE_CAST(JSON_VALUE(payload.trophies) AS INT64) AS trophies,
-  SAFE_CAST(JSON_VALUE(payload.warStars) AS INT64) AS war_stars,
-  SAFE_CAST(JSON_VALUE(payload.townHallLevel) AS INT64) AS thl,
-  SAFE_CAST(JSON_VALUE(payload.builderHallLevel) AS INT64) AS bhl,
-  SAFE_CAST(JSON_VALUE(payload.clanCapitalContributions) AS INT64) AS capital_contrib,
-  COALESCE(
-    SAFE_CAST(JSON_VALUE(payload.builderBaseTrophies) AS INT64),
-    SAFE_CAST(JSON_VALUE(payload.versusTrophies) AS INT64)
-  ) AS btrophies
+  extracted_date,
+  ptag,
+  pname,
+  role,
+  exp_level,
+  trophies,
+  war_stars,
+  thl,
+  bhl,
+  capital_contrib,
+  btrophies
 FROM
-  ${ref("coc_members")}
-${when(incremental(), "WHERE extracted_at >= TIMESTAMP(DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY))")}
+  ranked_members
+WHERE
+  row_num = 1
+

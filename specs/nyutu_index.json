@@ -146,6 +146,11 @@
   "2e6bf103-f16d-48f3-bab1-a30aee504354": {
     "title": "Relocate Dataform definitions Folder to Root Walkthrough",
     "source": "specs/coc-elt_20260714_relocate-definitions-to-root_walkthrough.md"
+  },
+  "2446725b-e34d-4274-b7da-dc565c7b5691": {
+    "title": "Filter Duplicate Clan Members and Retrieve Latest Daily Update Walkthrough",
+    "source": "specs/coc-elt_20260714_filter-clan-members-duplicates_walkthrough.md"
   }
 }
+
 
