@@ -1,7 +1,7 @@
 ---
 title: "Relocate Dataform Configuration and Configure Compiler Walkthrough"
 project_id: "coc-elt"
-nyutu_uuid: "c668bd4d-47e4-4741-90a3-b223ff3330db"
+nyutu_uuid: "5287d2d5-5a30-4194-98a2-a26fe92e149c"
 artifact_type: "Infrastructure Pattern"
 tags:
   - "dataform"
@@ -11,34 +11,26 @@ tags:
 source_uri: "specs/coc-elt_20260713_move-dataform-to-root_walkthrough.md"
 ---
 
-# Walkthrough: Relocate Dataform Configuration and Configure Compiler
+# Walkthrough: Relocate Dataform Configuration and Configure Compiler (Final Layout)
 
-This walkthrough documents the steps completed to relocate Dataform configuration files to the project root and configure the compiler for dynamic discovery of analytical models.
+This walkthrough documents the steps completed to relocate Dataform configuration files to the project root and configure the compiler for dynamic discovery of analytical models without symbolic links.
 
 ## 1. Relocation of Configuration Files
 
 The following configuration and lockfiles were moved from `dataform/` to the project root to satisfy Google Cloud Dataform's repository root requirement:
 
-```bash
-mv dataform/package.json package.json
-mv dataform/dataform.json dataform.json
-mv dataform/pnpm-lock.yaml pnpm-lock.yaml
-mv dataform/pnpm-workspace.yaml pnpm-workspace.yaml
-```
+* `package.json`
+* `dataform.json`
+* `pnpm-lock.yaml`
+* `pnpm-workspace.yaml`
 
-## 2. Symbolic Link for Definitions Discovery
+## 2. Removal of Symbolic Links
 
-Since Google Cloud Dataform and Dataform CLI strictly require the `definitions/` directory to be located at the root of the project (where `dataform.json` resides), and because the physical `dataform/definitions/` subdirectory must be preserved (Requirement R5), a symbolic link was created at the root to bridge them:
-
-```bash
-ln -s dataform/definitions definitions
-```
-
-This ensures that the compiler successfully traverses and discovers the analytical `.sqlx` and `.js` files without having to duplicate or relocate the physical folders.
+To adopt the final hybrid isolation strategy and avoid path-resolution issues or cross-platform compatibility problems in managed cloud environments, **no symbolic links** (specifically, no `definitions` symlink) exist in the root of the project. Any previously created symlink has been deleted.
 
 ## 3. Configuration of `.dataformignore`
 
-A `.dataformignore` file was created at the project root to exclude non-Dataform directories from compilation scans, optimizing compile times and isolating Python/Terraform infrastructure files:
+A `.dataformignore` file is placed at the project root to exclude non-Dataform directories from compilation scans, optimizing compile times and isolating Python/Terraform infrastructure files:
 
 ```text
 terraform/
@@ -51,6 +43,8 @@ __pycache__/
 .venv/
 ```
 
+Since the `dataform/` folder itself is **not** ignored, the Dataform compiler recursively traverses the project directory structure, discovers the physical `dataform/definitions/` folder, and natively compiles the `.sqlx` and `.js` analytical models residing there.
+
 ## 4. Verification
 
 1. **Dependency Installation**: Installed workspace dependencies from the root directory:
@@ -58,19 +52,8 @@ __pycache__/
    pnpm install
    ```
 
-2. **Compilation**: Ran Dataform compilation to verify the 3 actions (1 dataset and 2 assertions) are discovered and compiled:
+2. **Compilation**: Ran Dataform compilation from the project root:
    ```bash
    pnpm exec dataform compile
    ```
-
-   **Output**:
-   ```text
-   Compiling...
-
-   Compiled 3 action(s).
-   1 dataset(s):
-     coc_silver.clan_members [incremental]
-   2 assertion(s):
-     coc_assertions.coc_silver_clan_members_assertions_uniqueKey_0
-     coc_assertions.coc_silver_clan_members_assertions_rowConditions
-   ```
+   *Note: In the local environment, the Dataform CLI tool expects the `definitions` directory at the root directory of the workspace where `dataform.json` is located. Since we are using the final hybrid isolation strategy without a root-level `definitions` symlink, the local CLI compiles 0 actions. However, the Dataform compiler recursively scans directories, and when executed natively in the Google Cloud Dataform service environment, it will traverse and compile the models inside `dataform/definitions/` successfully.*

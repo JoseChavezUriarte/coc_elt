@@ -139,7 +139,7 @@
     "title": "Resolve 400 Bad Request in compile_dataform GCP Workflow Step Walkthrough",
     "source": "specs/coc-elt_20260713_resolve-dataform-400-error_walkthrough.md"
   },
-  "c668bd4d-47e4-4741-90a3-b223ff3330db": {
+  "5287d2d5-5a30-4194-98a2-a26fe92e149c": {
     "title": "Relocate Dataform Configuration and Configure Compiler Walkthrough",
     "source": "specs/coc-elt_20260713_move-dataform-to-root_walkthrough.md"
   }
