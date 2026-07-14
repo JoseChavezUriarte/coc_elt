@@ -80,7 +80,7 @@ def main():
             
             run_job >> Edge(label="Ingests raw data", color="dimgray") >> bq_bronze
             
-            workflows >> Edge(label="Triggers compilation", color="dimgray") >> dataform_repo
+            # workflows >> Edge(label="Triggers compilation", color="dimgray") >> dataform_repo
             dataform_sa >> Edge(label="Identifies", color="dimgray") >> dataform_repo
             
             # Dataform flow reads from Bronze and transforms/writes to Silver
