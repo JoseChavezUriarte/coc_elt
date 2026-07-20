@@ -1,0 +1,58 @@
+config {
+  type: "incremental",
+  schema: "coc_silver",
+  uniqueKey: ["extracted_date", "ptag", "spell_name"],
+  bigquery: {
+    partitionBy: "extracted_date",
+    clusterBy: ["ptag", "spell_village", "spell_name", "spell_level"],
+    updatePartitionFilter: "extracted_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)"
+  },
+  assertions: {
+    uniqueKey: ["extracted_date", "ptag", "spell_name"],
+    nonNull: ["extracted_date", "ptag", "spell_name"]
+  }
+}
+
+WITH parsed_members AS (
+  SELECT
+    extracted_at,
+    DATE(extracted_at) AS extracted_date,
+    JSON_VALUE(payload.tag) AS ptag,
+    payload.spells AS spells
+  FROM
+    ${ref("coc_members")}
+  ${when(incremental(), "WHERE extracted_at >= TIMESTAMP(DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY))")}
+),
+
+ranked_members AS (
+  SELECT
+    *,
+    ROW_NUMBER() OVER (PARTITION BY extracted_date, ptag ORDER BY extracted_at DESC) AS row_num
+  FROM
+    parsed_members
+),
+
+deduped_members AS (
+  SELECT
+    extracted_at,
+    extracted_date,
+    ptag,
+    spells
+  FROM
+    ranked_members
+  WHERE
+    row_num = 1
+)
+
+SELECT
+  extracted_at,
+  extracted_date,
+  ptag,
+  JSON_VALUE(spell.name) AS spell_name,
+  SAFE_CAST(JSON_VALUE(spell.level) AS INT64) AS spell_level,
+  SAFE_CAST(JSON_VALUE(spell.maxLevel) AS INT64) AS spell_max_level,
+  JSON_VALUE(spell.village) AS spell_village
+FROM
+  deduped_members,
+  UNNEST(JSON_QUERY_ARRAY(spells)) AS spell
+QUALIFY ROW_NUMBER() OVER (PARTITION BY extracted_date, ptag, spell_name ORDER BY spell_level DESC) = 1

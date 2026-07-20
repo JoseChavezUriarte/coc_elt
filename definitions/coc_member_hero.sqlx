@@ -1,0 +1,58 @@
+config {
+  type: "incremental",
+  schema: "coc_silver",
+  uniqueKey: ["extracted_date", "ptag", "hero_name"],
+  bigquery: {
+    partitionBy: "extracted_date",
+    clusterBy: ["ptag", "hero_village", "hero_name", "hero_level"],
+    updatePartitionFilter: "extracted_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)"
+  },
+  assertions: {
+    uniqueKey: ["extracted_date", "ptag", "hero_name"],
+    nonNull: ["extracted_date", "ptag", "hero_name"]
+  }
+}
+
+WITH parsed_members AS (
+  SELECT
+    extracted_at,
+    DATE(extracted_at) AS extracted_date,
+    JSON_VALUE(payload.tag) AS ptag,
+    payload.heroes AS heroes
+  FROM
+    ${ref("coc_members")}
+  ${when(incremental(), "WHERE extracted_at >= TIMESTAMP(DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY))")}
+),
+
+ranked_members AS (
+  SELECT
+    *,
+    ROW_NUMBER() OVER (PARTITION BY extracted_date, ptag ORDER BY extracted_at DESC) AS row_num
+  FROM
+    parsed_members
+),
+
+deduped_members AS (
+  SELECT
+    extracted_at,
+    extracted_date,
+    ptag,
+    heroes
+  FROM
+    ranked_members
+  WHERE
+    row_num = 1
+)
+
+SELECT
+  extracted_at,
+  extracted_date,
+  ptag,
+  JSON_VALUE(hero.name) AS hero_name,
+  SAFE_CAST(JSON_VALUE(hero.level) AS INT64) AS hero_level,
+  SAFE_CAST(JSON_VALUE(hero.maxLevel) AS INT64) AS hero_max_level,
+  JSON_VALUE(hero.village) AS hero_village
+FROM
+  deduped_members,
+  UNNEST(JSON_QUERY_ARRAY(heroes)) AS hero
+QUALIFY ROW_NUMBER() OVER (PARTITION BY extracted_date, ptag, hero_name ORDER BY hero_level DESC) = 1

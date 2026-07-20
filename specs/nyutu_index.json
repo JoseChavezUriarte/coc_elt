@@ -170,6 +170,10 @@
   "c3eea545-1f9c-4310-aea4-14231f27a8f5": {
     "title": "Soft Background Colors for Infrastructure clusters and Gray Edges Walkthrough",
     "source": "specs/coc-elt_20260714_soft-cluster-colors_walkthrough.md"
+  },
+  "4a1809b3-9746-4ee5-bff8-e18adb8d195b": {
+    "title": "Denormalized Incremental Silver Tables for Member Details Walkthrough",
+    "source": "specs/coc-elt_20260720_denormalized-silver-tables_walkthrough.md"
   }
 }
 
