@@ -6,7 +6,7 @@ config {
   tags: ["silver", "daily"],
   bigquery: {
     partitionBy: "extracted_date",
-    clusterBy: ["extracted_date", "tag"],
+    clusterBy: ["tag"],
     updatePartitionFilter: "extracted_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)",
     labels: {
       environment: "production",
