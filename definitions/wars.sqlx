@@ -41,7 +41,10 @@ config {
     battleModifier: "The battle modifier applied to the war (e.g. hardMode).",
     preparationStartTime: "DATETIME representation of the preparation start time.",
     startTime: "DATETIME representation of the war start time.",
-    endTime: "DATETIME representation of the war end time."
+    endTime: "DATETIME representation of the war end time.",
+    mapPosition: "Map position of the attacking player in the war.",
+    opponentAttacks: "Number of attacks received by the attacking player in this war.",
+    townhallLevel: "Town Hall level of the attacking player."
   }
 }
 
@@ -87,7 +90,10 @@ clan_attacks AS (
     JSON_VALUE(payload.battleModifier) AS battleModifier,
     SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(payload.preparationStartTime)) AS DATETIME) AS preparationStartTime,
     SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(payload.startTime)) AS DATETIME) AS startTime,
-    SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(payload.endTime)) AS DATETIME) AS endTime
+    SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(payload.endTime)) AS DATETIME) AS endTime,
+    SAFE_CAST(JSON_VALUE(member.mapPosition) AS INT64) AS mapPosition,
+    SAFE_CAST(JSON_VALUE(member.opponentAttacks) AS INT64) AS opponentAttacks,
+    SAFE_CAST(JSON_VALUE(member.townhallLevel) AS INT64) AS townhallLevel
   FROM
     latest_war_payloads,
     UNNEST(JSON_QUERY_ARRAY(payload.clan.members)) AS member,
@@ -118,7 +124,10 @@ opponent_attacks AS (
     JSON_VALUE(payload.battleModifier) AS battleModifier,
     SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(payload.preparationStartTime)) AS DATETIME) AS preparationStartTime,
     SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(payload.startTime)) AS DATETIME) AS startTime,
-    SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(payload.endTime)) AS DATETIME) AS endTime
+    SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(payload.endTime)) AS DATETIME) AS endTime,
+    SAFE_CAST(JSON_VALUE(member.mapPosition) AS INT64) AS mapPosition,
+    SAFE_CAST(JSON_VALUE(member.opponentAttacks) AS INT64) AS opponentAttacks,
+    SAFE_CAST(JSON_VALUE(member.townhallLevel) AS INT64) AS townhallLevel
   FROM
     latest_war_payloads,
     UNNEST(JSON_QUERY_ARRAY(payload.opponent.members)) AS member,
@@ -154,7 +163,10 @@ SELECT
   battleModifier,
   preparationStartTime,
   startTime,
-  endTime
+  endTime,
+  mapPosition,
+  opponentAttacks,
+  townhallLevel
 FROM
   unioned_attacks
 QUALIFY ROW_NUMBER() OVER (
