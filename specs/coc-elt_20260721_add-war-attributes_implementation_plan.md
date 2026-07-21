@@ -1,3 +1,55 @@
+---
+title: "Add War Attributes to wars Implementation Plan"
+project_id: "coc-elt"
+nyutu_uuid: "0b1d0744-0d6f-425d-ab94-69fb2df906de"
+artifact_type: "Infrastructure Pattern"
+tags:
+  - "dataform"
+  - "bigquery"
+  - "silver-layer"
+  - "implementation_plan"
+source_uri: "specs/coc-elt_20260721_add-war-attributes_implementation_plan.md"
+---
+
+# Implementation Plan - Add War-Level Attributes to `definitions/wars.sqlx` (Revised)
+
+This document details the revised implementation plan to introduce 8 war-level attributes into the silver denormalized table defined by `definitions/wars.sqlx` and exclude the 3 redundant columns (`opponentClanLevel`, `opponentDestructionPct`, `opponentStars`).
+
+---
+
+## 1. Existing System Context
+The file `definitions/wars.sqlx` defines an incremental Dataform table `coc_silver.wars` that lists individual player attacks in clan wars. Each row represents an attack and includes metadata about the war (such as `state` and `teamSize`). 
+
+The new attributes are war-level attributes found in the root of the JSON payload. In a denormalized silver table where each row represents an attack, these attributes will be broadcasted (duplicated) across all attacks belonging to the same war payload.
+
+To simplify the schema and avoid sparse/redundant columns, we map the clan level, destruction percentage, and stars to single unified columns (`clanLevel`, `clanDestructionPct`, `clanStars`). These columns will represent the statistics of the *attacking member's clan* based on whether they belong to the home clan (`member_type = 'clan'`) or the opponent clan (`member_type = 'opponent'`).
+
+---
+
+## 2. Requirements (EARS Notation)
+- **R1 (Table Config Documentation)**: When the Dataform table `coc_silver.wars` is compiled, its configuration block **shall** document the 8 new columns (`clanLevel`, `clanDestructionPct`, `clanStars`, `attacksPerMember`, `battleModifier`, `preparationStartTime`, `startTime`, and `endTime`) and omit any redundant/removed columns.
+- **R2 (Attribute Projection)**: Both the `clan_attacks` and `opponent_attacks` subqueries **shall** project the 8 new columns using the specified payload extraction logic and cast statements.
+- **R3 (Redundant Column Exclusion)**: The final table and subqueries **shall not** project the redundant columns `opponentClanLevel`, `opponentDestructionPct`, and `opponentStars`.
+- **R4 (Numeric Safety)**: The columns `clanLevel`, `clanStars`, `attacksPerMember`, and `clanDestructionPct` **shall** be extracted using `SAFE_CAST` to safeguard against invalid or missing values in raw JSON payloads.
+- **R5 (String Processing)**: The columns `battleModifier`, `preparationStartTime`, `startTime`, and `endTime` **shall** be extracted as string types using `JSON_VALUE`.
+- **R6 (Compilation)**: When compiling the Dataform project locally, the compiler **shall** execute successfully without schema or SQL errors.
+
+---
+
+## 3. Technical Decisions & Trade-offs
+- **Decision 1 (Consolidation of Clan-level Attributes)**: Instead of projecting separate columns for `clanLevel` and `opponentClanLevel` (which would result in high sparsity and redundant columns), we project a single column `clanLevel` representing the level of the attacking member's clan (`payload.clan.clanLevel` for `member_type = 'clan'` and `payload.opponent.clanLevel` for `member_type = 'opponent'`).
+  * **Pros**: Avoids NULL-heavy redundant columns, simplifies analytics on attacker clans, matches the `member_type` logic.
+  * **Cons**: If users want to query the opponent clan's level of a given attack in a single row without joins, they must use the opponent's tag to lookup. However, since every attack has an opposing member tag, this is easily done.
+- **Decision 2 (Float Precision for Destruction)**: `destruction_percentage` of an individual attack is an integer (`INT64`), but the overall clan destruction percentage `destructionPercentage` in the payload is a percentage/decimal representing cumulative damage, which we cast to `FLOAT64` as `clanDestructionPct`.
+- **Decision 3 (Date representation)**: Keep date strings (`preparationStartTime`, `startTime`, `endTime`) as standard JSON string fields (using `JSON_VALUE`) to avoid timezone/format conversion overhead in this layer, following the pattern of JSON date fields in other models.
+
+---
+
+## 4. File Specifications & Templates
+
+### File: `definitions/wars.sqlx`
+
+```sql
 config {
   type: "incremental",
   schema: "coc_silver",
@@ -161,3 +213,13 @@ QUALIFY ROW_NUMBER() OVER (
   PARTITION BY extracted_date, ptag, defender_tag
   ORDER BY extracted_at DESC, attack_order DESC
 ) = 1
+```
+
+---
+
+## 5. Implementation Tasks
+- [x] **T1**: Update the configuration block of `definitions/wars.sqlx` to declare the 8 new columns and their corresponding documentation descriptions.
+- [x] **T2**: Modify the `clan_attacks` CTE subquery to extract and alias the 8 war-level fields using `payload`.
+- [x] **T3**: Modify the `opponent_attacks` CTE subquery to extract and alias the 8 war-level fields using `payload` with the appropriate opponent mappings.
+- [x] **T4**: Update the final SELECT projection query block to select the 8 new fields from `unioned_attacks`.
+- [x] **T5**: Compile the Dataform project using the Dataform CLI (`pnpm exec dataform compile`) to verify syntax, column descriptions, and output schemas locally. Do NOT run git push or trigger GCP workflows.
