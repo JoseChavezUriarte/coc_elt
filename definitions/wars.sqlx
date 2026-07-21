@@ -1,0 +1,131 @@
+config {
+  type: "incremental",
+  schema: "coc_silver",
+  uniqueKey: ["extracted_date", "ptag", "defender_tag"],
+  description: "Denormalized and deduplicated silver table containing clan war attacks.",
+  tags: ["silver", "daily"],
+  bigquery: {
+    partitionBy: "extracted_date",
+    clusterBy: ["extracted_date", "ptag", "state", "teamSize"],
+    updatePartitionFilter: "extracted_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)",
+    labels: {
+      environment: "production",
+      domain: "clash-of-clans",
+      layer: "silver"
+    }
+  },
+  assertions: {
+    uniqueKey: ["extracted_date", "ptag", "defender_tag"],
+    nonNull: ["extracted_date", "ptag", "defender_tag"]
+  },
+  columns: {
+    extracted_at: "Timestamp when the war payload was retrieved from Clash of Clans API.",
+    extracted_date: "Partitioning date derived from extracted_at.",
+    ptag: "Unique identifier tag of the player performing the attack.",
+    defender_tag: "Unique identifier tag of the player being defended.",
+    state: "The current state of the war (e.g. preparation, inWar, warEnded).",
+    teamSize: "The size of the teams in the war.",
+    war_clan_tag: "Tag of the home clan.",
+    war_opponent_tag: "Tag of the opponent clan.",
+    member_tag: "Tag of the member who performed the attack.",
+    member_name: "In-game name of the member who performed the attack.",
+    member_type: "Role of the member's clan in the war ('clan' or 'opponent').",
+    stars: "Number of stars scored in the attack.",
+    destruction_percentage: "Destruction percentage achieved in the attack.",
+    attack_order: "Chronological order of the attack in the war.",
+    duration: "Duration of the attack in seconds."
+  }
+}
+
+WITH latest_war_payloads AS (
+  SELECT
+    extracted_at,
+    DATE(extracted_at) AS extracted_date,
+    payload
+  FROM
+    ${ref("coc_current_war")}
+  ${when(incremental(), "WHERE extracted_at >= TIMESTAMP(DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY))")}
+  QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY
+      DATE(extracted_at),
+      JSON_VALUE(payload.clan.tag),
+      JSON_VALUE(payload.opponent.tag)
+    ORDER BY
+      extracted_at DESC
+  ) = 1
+),
+
+clan_attacks AS (
+  SELECT
+    extracted_at,
+    extracted_date,
+    JSON_VALUE(payload.state) AS state,
+    SAFE_CAST(JSON_VALUE(payload.teamSize) AS INT64) AS teamSize,
+    JSON_VALUE(payload.clan.tag) AS war_clan_tag,
+    JSON_VALUE(payload.opponent.tag) AS war_opponent_tag,
+    JSON_VALUE(member.tag) AS member_tag,
+    JSON_VALUE(member.name) AS member_name,
+    'clan' AS member_type,
+    JSON_VALUE(attack.attackerTag) AS ptag,
+    JSON_VALUE(attack.defenderTag) AS defender_tag,
+    SAFE_CAST(JSON_VALUE(attack.stars) AS INT64) AS stars,
+    SAFE_CAST(JSON_VALUE(attack.destructionPercentage) AS INT64) AS destruction_percentage,
+    SAFE_CAST(JSON_VALUE(attack.order) AS INT64) AS attack_order,
+    SAFE_CAST(JSON_VALUE(attack.duration) AS INT64) AS duration
+  FROM
+    latest_war_payloads,
+    UNNEST(JSON_QUERY_ARRAY(payload.clan.members)) AS member,
+    UNNEST(JSON_QUERY_ARRAY(member.attacks)) AS attack
+),
+
+opponent_attacks AS (
+  SELECT
+    extracted_at,
+    extracted_date,
+    JSON_VALUE(payload.state) AS state,
+    SAFE_CAST(JSON_VALUE(payload.teamSize) AS INT64) AS teamSize,
+    JSON_VALUE(payload.clan.tag) AS war_clan_tag,
+    JSON_VALUE(payload.opponent.tag) AS war_opponent_tag,
+    JSON_VALUE(member.tag) AS member_tag,
+    JSON_VALUE(member.name) AS member_name,
+    'opponent' AS member_type,
+    JSON_VALUE(attack.attackerTag) AS ptag,
+    JSON_VALUE(attack.defenderTag) AS defender_tag,
+    SAFE_CAST(JSON_VALUE(attack.stars) AS INT64) AS stars,
+    SAFE_CAST(JSON_VALUE(attack.destructionPercentage) AS INT64) AS destruction_percentage,
+    SAFE_CAST(JSON_VALUE(attack.order) AS INT64) AS attack_order,
+    SAFE_CAST(JSON_VALUE(attack.duration) AS INT64) AS duration
+  FROM
+    latest_war_payloads,
+    UNNEST(JSON_QUERY_ARRAY(payload.opponent.members)) AS member,
+    UNNEST(JSON_QUERY_ARRAY(member.attacks)) AS attack
+),
+
+unioned_attacks AS (
+  SELECT * FROM clan_attacks
+  UNION ALL
+  SELECT * FROM opponent_attacks
+)
+
+SELECT
+  extracted_at,
+  extracted_date,
+  ptag,
+  defender_tag,
+  state,
+  teamSize,
+  war_clan_tag,
+  war_opponent_tag,
+  member_tag,
+  member_name,
+  member_type,
+  stars,
+  destruction_percentage,
+  attack_order,
+  duration
+FROM
+  unioned_attacks
+QUALIFY ROW_NUMBER() OVER (
+  PARTITION BY extracted_date, ptag, defender_tag
+  ORDER BY extracted_at DESC, attack_order DESC
+) = 1
