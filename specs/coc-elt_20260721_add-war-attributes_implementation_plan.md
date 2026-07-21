@@ -1,7 +1,7 @@
 ---
 title: "Add War Attributes to wars Implementation Plan"
 project_id: "coc-elt"
-nyutu_uuid: "0b1d0744-0d6f-425d-ab94-69fb2df906de"
+nyutu_uuid: "d5a5855f-30e8-4d99-be06-58a8fd51216e"
 artifact_type: "Infrastructure Pattern"
 tags:
   - "dataform"
@@ -11,9 +11,9 @@ tags:
 source_uri: "specs/coc-elt_20260721_add-war-attributes_implementation_plan.md"
 ---
 
-# Implementation Plan - Add War-Level Attributes to `definitions/wars.sqlx` (Revised)
+# Implementation Plan - Add War-Level Attributes to `definitions/wars.sqlx` (Revised with Datetime Casts)
 
-This document details the revised implementation plan to introduce 8 war-level attributes into the silver denormalized table defined by `definitions/wars.sqlx` and exclude the 3 redundant columns (`opponentClanLevel`, `opponentDestructionPct`, `opponentStars`).
+This document details the revised implementation plan to introduce 8 war-level attributes into the silver denormalized table defined by `definitions/wars.sqlx` and convert columns ending in 'Time' to `DATETIME` objects.
 
 ---
 
@@ -31,7 +31,7 @@ To simplify the schema and avoid sparse/redundant columns, we map the clan level
 - **R2 (Attribute Projection)**: Both the `clan_attacks` and `opponent_attacks` subqueries **shall** project the 8 new columns using the specified payload extraction logic and cast statements.
 - **R3 (Redundant Column Exclusion)**: The final table and subqueries **shall not** project the redundant columns `opponentClanLevel`, `opponentDestructionPct`, and `opponentStars`.
 - **R4 (Numeric Safety)**: The columns `clanLevel`, `clanStars`, `attacksPerMember`, and `clanDestructionPct` **shall** be extracted using `SAFE_CAST` to safeguard against invalid or missing values in raw JSON payloads.
-- **R5 (String Processing)**: The columns `battleModifier`, `preparationStartTime`, `startTime`, and `endTime` **shall** be extracted as string types using `JSON_VALUE`.
+- **R5 (Datetime Casts)**: The columns `preparationStartTime`, `startTime`, and `endTime` **shall** be extracted using `SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(...)) AS DATETIME)` to correctly parse timezone-aware compact ISO timestamps returned by the API into naive DATETIME objects.
 - **R6 (Compilation)**: When compiling the Dataform project locally, the compiler **shall** execute successfully without schema or SQL errors.
 
 ---
@@ -41,7 +41,7 @@ To simplify the schema and avoid sparse/redundant columns, we map the clan level
   * **Pros**: Avoids NULL-heavy redundant columns, simplifies analytics on attacker clans, matches the `member_type` logic.
   * **Cons**: If users want to query the opponent clan's level of a given attack in a single row without joins, they must use the opponent's tag to lookup. However, since every attack has an opposing member tag, this is easily done.
 - **Decision 2 (Float Precision for Destruction)**: `destruction_percentage` of an individual attack is an integer (`INT64`), but the overall clan destruction percentage `destructionPercentage` in the payload is a percentage/decimal representing cumulative damage, which we cast to `FLOAT64` as `clanDestructionPct`.
-- **Decision 3 (Date representation)**: Keep date strings (`preparationStartTime`, `startTime`, `endTime`) as standard JSON string fields (using `JSON_VALUE`) to avoid timezone/format conversion overhead in this layer, following the pattern of JSON date fields in other models.
+- **Decision 3 (Datetime Cast Strategy)**: Parse with `SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(...))` and cast with `SAFE_CAST(... AS DATETIME)`. `SAFE.PARSE_TIMESTAMP` handles timezone designator `'Z'` natively and avoids compilation/runtime errors if strings are malformed. `SAFE_CAST(... AS DATETIME)` projects the timestamp to a timezone-naive `DATETIME` corresponding to the UTC values in the source.
 
 ---
 
@@ -91,9 +91,9 @@ config {
     clanStars: "Total stars scored by the clan of the member performing the attack.",
     attacksPerMember: "Number of allowed attacks per member in the war.",
     battleModifier: "The battle modifier applied to the war (e.g. hardMode).",
-    preparationStartTime: "ISO 8601 string representation of the preparation start time.",
-    startTime: "ISO 8601 string representation of the war start time.",
-    endTime: "ISO 8601 string representation of the war end time."
+    preparationStartTime: "DATETIME representation of the preparation start time.",
+    startTime: "DATETIME representation of the war start time.",
+    endTime: "DATETIME representation of the war end time."
   }
 }
 
@@ -137,9 +137,9 @@ clan_attacks AS (
     SAFE_CAST(JSON_VALUE(payload.clan.stars) AS INT64) AS clanStars,
     SAFE_CAST(JSON_VALUE(payload.attacksPerMember) AS INT64) AS attacksPerMember,
     JSON_VALUE(payload.battleModifier) AS battleModifier,
-    JSON_VALUE(payload.preparationStartTime) AS preparationStartTime,
-    JSON_VALUE(payload.startTime) AS startTime,
-    JSON_VALUE(payload.endTime) AS endTime
+    SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(payload.preparationStartTime)) AS DATETIME) AS preparationStartTime,
+    SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(payload.startTime)) AS DATETIME) AS startTime,
+    SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(payload.endTime)) AS DATETIME) AS endTime
   FROM
     latest_war_payloads,
     UNNEST(JSON_QUERY_ARRAY(payload.clan.members)) AS member,
@@ -168,9 +168,9 @@ opponent_attacks AS (
     SAFE_CAST(JSON_VALUE(payload.opponent.stars) AS INT64) AS clanStars,
     SAFE_CAST(JSON_VALUE(payload.attacksPerMember) AS INT64) AS attacksPerMember,
     JSON_VALUE(payload.battleModifier) AS battleModifier,
-    JSON_VALUE(payload.preparationStartTime) AS preparationStartTime,
-    JSON_VALUE(payload.startTime) AS startTime,
-    JSON_VALUE(payload.endTime) AS endTime
+    SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(payload.preparationStartTime)) AS DATETIME) AS preparationStartTime,
+    SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(payload.startTime)) AS DATETIME) AS startTime,
+    SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(payload.endTime)) AS DATETIME) AS endTime
   FROM
     latest_war_payloads,
     UNNEST(JSON_QUERY_ARRAY(payload.opponent.members)) AS member,
@@ -219,7 +219,7 @@ QUALIFY ROW_NUMBER() OVER (
 
 ## 5. Implementation Tasks
 - [x] **T1**: Update the configuration block of `definitions/wars.sqlx` to declare the 8 new columns and their corresponding documentation descriptions.
-- [x] **T2**: Modify the `clan_attacks` CTE subquery to extract and alias the 8 war-level fields using `payload`.
-- [x] **T3**: Modify the `opponent_attacks` CTE subquery to extract and alias the 8 war-level fields using `payload` with the appropriate opponent mappings.
+- [x] **T2**: Modify the `clan_attacks` CTE subquery to extract and alias the 8 war-level fields using `payload` with datetime casts.
+- [x] **T3**: Modify the `opponent_attacks` CTE subquery to extract and alias the 8 war-level fields using `payload` with datetime casts and opponent mappings.
 - [x] **T4**: Update the final SELECT projection query block to select the 8 new fields from `unioned_attacks`.
 - [x] **T5**: Compile the Dataform project using the Dataform CLI (`pnpm exec dataform compile`) to verify syntax, column descriptions, and output schemas locally. Do NOT run git push or trigger GCP workflows.

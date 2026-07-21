@@ -39,9 +39,9 @@ config {
     clanStars: "Total stars scored by the clan of the member performing the attack.",
     attacksPerMember: "Number of allowed attacks per member in the war.",
     battleModifier: "The battle modifier applied to the war (e.g. hardMode).",
-    preparationStartTime: "ISO 8601 string representation of the preparation start time.",
-    startTime: "ISO 8601 string representation of the war start time.",
-    endTime: "ISO 8601 string representation of the war end time."
+    preparationStartTime: "DATETIME representation of the preparation start time.",
+    startTime: "DATETIME representation of the war start time.",
+    endTime: "DATETIME representation of the war end time."
   }
 }
 
@@ -85,9 +85,9 @@ clan_attacks AS (
     SAFE_CAST(JSON_VALUE(payload.clan.stars) AS INT64) AS clanStars,
     SAFE_CAST(JSON_VALUE(payload.attacksPerMember) AS INT64) AS attacksPerMember,
     JSON_VALUE(payload.battleModifier) AS battleModifier,
-    JSON_VALUE(payload.preparationStartTime) AS preparationStartTime,
-    JSON_VALUE(payload.startTime) AS startTime,
-    JSON_VALUE(payload.endTime) AS endTime
+    SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(payload.preparationStartTime)) AS DATETIME) AS preparationStartTime,
+    SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(payload.startTime)) AS DATETIME) AS startTime,
+    SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(payload.endTime)) AS DATETIME) AS endTime
   FROM
     latest_war_payloads,
     UNNEST(JSON_QUERY_ARRAY(payload.clan.members)) AS member,
@@ -116,9 +116,9 @@ opponent_attacks AS (
     SAFE_CAST(JSON_VALUE(payload.opponent.stars) AS INT64) AS clanStars,
     SAFE_CAST(JSON_VALUE(payload.attacksPerMember) AS INT64) AS attacksPerMember,
     JSON_VALUE(payload.battleModifier) AS battleModifier,
-    JSON_VALUE(payload.preparationStartTime) AS preparationStartTime,
-    JSON_VALUE(payload.startTime) AS startTime,
-    JSON_VALUE(payload.endTime) AS endTime
+    SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(payload.preparationStartTime)) AS DATETIME) AS preparationStartTime,
+    SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(payload.startTime)) AS DATETIME) AS startTime,
+    SAFE_CAST(SAFE.PARSE_TIMESTAMP('%Y%m%dT%H%M%E*SZ', JSON_VALUE(payload.endTime)) AS DATETIME) AS endTime
   FROM
     latest_war_payloads,
     UNNEST(JSON_QUERY_ARRAY(payload.opponent.members)) AS member,
