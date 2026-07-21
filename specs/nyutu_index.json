@@ -178,6 +178,10 @@
   "3a26943b-1dca-48dc-80ed-114fb416190d": {
     "title": "Create wars Table in coc_silver Walkthrough",
     "source": "specs/coc-elt_20260721_create-wars-table_walkthrough.md"
+  },
+  "30f1bae4-5ed2-4464-94d4-de6ee33e372d": {
+    "title": "Create clan_description Table in coc_silver Walkthrough",
+    "source": "specs/coc-elt_20260721_create-clan-description-table_walkthrough.md"
   }
 }
 
