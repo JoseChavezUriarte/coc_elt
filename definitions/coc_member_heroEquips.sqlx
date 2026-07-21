@@ -2,14 +2,30 @@ config {
   type: "incremental",
   schema: "coc_silver",
   uniqueKey: ["extracted_date", "ptag", "equipment_name"],
+  description: "Denormalized and deduplicated silver table containing player hero equipment statistics.",
+  tags: ["silver", "daily"],
   bigquery: {
     partitionBy: "extracted_date",
     clusterBy: ["ptag", "equipment_village", "equipment_name", "equipment_level"],
-    updatePartitionFilter: "extracted_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)"
+    updatePartitionFilter: "extracted_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)",
+    labels: {
+      environment: "production",
+      domain: "clash-of-clans",
+      layer: "silver"
+    }
   },
   assertions: {
     uniqueKey: ["extracted_date", "ptag", "equipment_name"],
     nonNull: ["extracted_date", "ptag", "equipment_name"]
+  },
+  columns: {
+    extracted_at: "Timestamp when the player profile raw payload was retrieved from Clash of Clans API.",
+    extracted_date: "Partitioning date derived from extracted_at.",
+    ptag: "Unique identifier tag of the player.",
+    equipment_name: "Name of the hero equipment (e.g. Giant Gauntlet, Invisibility Vial).",
+    equipment_level: "Current level of the hero equipment.",
+    equipment_max_level: "Maximum possible level for the hero equipment.",
+    equipment_village: "Village where the hero equipment is active (home or builderBase)."
   }
 }
 

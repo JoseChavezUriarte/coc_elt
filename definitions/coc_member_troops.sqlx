@@ -2,14 +2,30 @@ config {
   type: "incremental",
   schema: "coc_silver",
   uniqueKey: ["extracted_date", "ptag", "troop_name"],
+  description: "Denormalized and deduplicated silver table containing player troop statistics.",
+  tags: ["silver", "daily"],
   bigquery: {
     partitionBy: "extracted_date",
     clusterBy: ["ptag", "troop_village", "troop_name", "troop_level"],
-    updatePartitionFilter: "extracted_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)"
+    updatePartitionFilter: "extracted_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)",
+    labels: {
+      environment: "production",
+      domain: "clash-of-clans",
+      layer: "silver"
+    }
   },
   assertions: {
     uniqueKey: ["extracted_date", "ptag", "troop_name"],
     nonNull: ["extracted_date", "ptag", "troop_name"]
+  },
+  columns: {
+    extracted_at: "Timestamp when the player profile raw payload was retrieved from Clash of Clans API.",
+    extracted_date: "Partitioning date derived from extracted_at.",
+    ptag: "Unique identifier tag of the player.",
+    troop_name: "Name of the troop (e.g. Barbarian, Archer).",
+    troop_level: "Current level of the troop upgraded by the player.",
+    troop_max_level: "Maximum possible level for the troop.",
+    troop_village: "Village where the troop is active (home or builderBase)."
   }
 }
 

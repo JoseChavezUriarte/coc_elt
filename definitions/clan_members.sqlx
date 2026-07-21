@@ -2,14 +2,34 @@ config {
   type: "incremental",
   schema: "coc_silver",
   uniqueKey: ["extracted_date", "ptag"],
+  description: "Denormalized and deduplicated silver table containing clan member summary profiles.",
+  tags: ["silver", "daily"],
   bigquery: {
     partitionBy: "extracted_date",
     clusterBy: ["ptag", "role"],
-    updatePartitionFilter: "extracted_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)"
+    updatePartitionFilter: "extracted_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)",
+    labels: {
+      environment: "production",
+      domain: "clash-of-clans",
+      layer: "silver"
+    }
   },
   assertions: {
     uniqueKey: ["extracted_date", "ptag"],
     nonNull: ["extracted_date", "ptag"]
+  },
+  columns: {
+    extracted_date: "Partitioning date derived from extracted_at.",
+    ptag: "Unique identifier tag of the player.",
+    pname: "Player in-game display name.",
+    role: "Role of the member in the clan (e.g. leader, coLeader, admin, member).",
+    exp_level: "Player experience level.",
+    trophies: "Current trophy count in the main village.",
+    war_stars: "Total war stars earned by the player.",
+    thl: "Town hall level.",
+    bhl: "Builder hall level.",
+    capital_contrib: "Total clan capital contributions.",
+    btrophies: "Current trophy count in builder base / versus base."
   }
 }
 

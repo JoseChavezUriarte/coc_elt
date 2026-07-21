@@ -2,14 +2,31 @@ config {
   type: "incremental",
   schema: "coc_silver",
   uniqueKey: ["extracted_date", "ptag", "achievement_name"],
+  description: "Denormalized and deduplicated silver table containing player achievement progress.",
+  tags: ["silver", "daily"],
   bigquery: {
     partitionBy: "extracted_date",
     clusterBy: ["ptag", "achievement_name", "achievement_village", "achievement_stars"],
-    updatePartitionFilter: "extracted_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)"
+    updatePartitionFilter: "extracted_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)",
+    labels: {
+      environment: "production",
+      domain: "clash-of-clans",
+      layer: "silver"
+    }
   },
   assertions: {
     uniqueKey: ["extracted_date", "ptag", "achievement_name"],
     nonNull: ["extracted_date", "ptag", "achievement_name"]
+  },
+  columns: {
+    extracted_at: "Timestamp when the player profile raw payload was retrieved from Clash of Clans API.",
+    extracted_date: "Partitioning date derived from extracted_at.",
+    ptag: "Unique identifier tag of the player.",
+    achievement_name: "Name of the achievement.",
+    achievement_stars: "Number of stars achieved for this achievement.",
+    achievement_value: "Current progress value reached for the achievement.",
+    achievement_target: "Target value required to complete the current level of achievement.",
+    achievement_village: "Village type associated with the achievement (home or builderBase)."
   }
 }
 

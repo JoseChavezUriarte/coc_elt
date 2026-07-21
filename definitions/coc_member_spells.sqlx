@@ -2,14 +2,30 @@ config {
   type: "incremental",
   schema: "coc_silver",
   uniqueKey: ["extracted_date", "ptag", "spell_name"],
+  description: "Denormalized and deduplicated silver table containing player spell statistics.",
+  tags: ["silver", "daily"],
   bigquery: {
     partitionBy: "extracted_date",
     clusterBy: ["ptag", "spell_village", "spell_name", "spell_level"],
-    updatePartitionFilter: "extracted_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)"
+    updatePartitionFilter: "extracted_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)",
+    labels: {
+      environment: "production",
+      domain: "clash-of-clans",
+      layer: "silver"
+    }
   },
   assertions: {
     uniqueKey: ["extracted_date", "ptag", "spell_name"],
     nonNull: ["extracted_date", "ptag", "spell_name"]
+  },
+  columns: {
+    extracted_at: "Timestamp when the player profile raw payload was retrieved from Clash of Clans API.",
+    extracted_date: "Partitioning date derived from extracted_at.",
+    ptag: "Unique identifier tag of the player.",
+    spell_name: "Name of the spell (e.g. Lightning Spell, Healing Spell).",
+    spell_level: "Current level of the spell upgraded by the player.",
+    spell_max_level: "Maximum possible level for the spell.",
+    spell_village: "Village where the spell is active (home or builderBase)."
   }
 }
 
