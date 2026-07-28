@@ -52,10 +52,9 @@ WITH cohortes_semanales AS (
             LIMIT 1
         )[OFFSET(0)] AS latest_stats
     FROM ${ref("clan_description")}
-    WHERE 
-        ${when(incremental(), 
-            `extracted_date >= DATE_TRUNC(DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY), WEEK(MONDAY))`
-        )}
+    ${when(incremental(), 
+        `WHERE extracted_date >= DATE_TRUNC(DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY), WEEK(MONDAY))`
+    )}
     GROUP BY 1
 )
 SELECT
