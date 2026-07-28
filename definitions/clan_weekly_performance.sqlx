@@ -1,0 +1,75 @@
+config {
+    type: "incremental",
+    schema: "coc_gold",
+    uniqueKey: ["week_start_date"],
+    description: "Weekly performance aggregation of clan stats based on daily snapshots.",
+    tags: ["gold", "daily"],
+    bigquery: {
+        labels: {
+            environment: "production",
+            domain: "clash-of-clans",
+            layer: "gold"
+        }
+    },
+    assertions: {
+        uniqueKey: ["week_start_date"],
+        nonNull: ["week_start_date"]
+    },
+    columns: {
+        week_start_date: "The start date of the week (the Monday of that week).",
+        week_num: "The week number of the year (starting Monday).",
+        year: "The year of the weekly cohort.",
+        last_date: "The latest snapshot date within this week.",
+        first_date: "The earliest snapshot date within this week.",
+        regs: "Number of snapshot records aggregated in this week.",
+        w_ClanPoints: "Clan points recorded on the last_date of the week.",
+        w_clanBuilderBasePoints: "Clan builder base points on the last_date.",
+        w_clanCapitalPoints: "Clan capital points on the last_date.",
+        w_warWins: "Total war wins on the last_date.",
+        w_warTies: "Total war ties on the last_date.",
+        w_warLosses: "Total war losses on the last_date.",
+        w_members: "Number of members in the clan on the last_date."
+    }
+}
+
+WITH cohortes_semanales AS (
+    SELECT
+        DATE_TRUNC(extracted_date, WEEK(MONDAY)) AS week_start_date,
+        MAX(extracted_date) AS last_date,
+        MIN(extracted_date) AS first_date,
+        COUNT(*) AS regs,
+        ARRAY_AGG(
+            STRUCT(
+                clanPoints AS w_ClanPoints,
+                clanBuilderBasePoints AS w_clanBuilderBasePoints,
+                clanCapitalPoints AS w_clanCapitalPoints,
+                warWins AS w_warWins,
+                warTies AS w_warTies,
+                warLosses AS w_warLosses,
+                members AS w_members
+            ) 
+            ORDER BY extracted_date DESC 
+            LIMIT 1
+        )[OFFSET(0)] AS latest_stats
+    FROM ${ref("clan_description")}
+    WHERE 
+        ${when(incremental(), 
+            `extracted_date >= DATE_TRUNC(DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY), WEEK(MONDAY))`
+        )}
+    GROUP BY 1
+)
+SELECT
+    week_start_date,
+    EXTRACT(WEEK(MONDAY) FROM week_start_date) AS week_num,
+    EXTRACT(YEAR FROM week_start_date) AS year,
+    last_date,
+    first_date,
+    regs,
+    latest_stats.w_ClanPoints,
+    latest_stats.w_clanBuilderBasePoints,
+    latest_stats.w_clanCapitalPoints,
+    latest_stats.w_warWins,
+    latest_stats.w_warTies,
+    latest_stats.w_warLosses,
+    latest_stats.w_members
+FROM cohortes_semanales
