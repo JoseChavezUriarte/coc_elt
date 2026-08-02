@@ -29,9 +29,9 @@ Both assets MUST explicitly set `schema: "coc_gold"` in their `config` blocks. N
 
 ### Directive 2: Temporal Idempotency via Deterministic JS Timestamp
 All occurrences of `CURRENT_DATE()` and `CURRENT_TIMESTAMP()` are REMOVED.
-- Source filter in `clan_member_activity_historical.sqlx`:
+- Source filter in `clan_member_activity_historical.sqlx` (unconditional 7-day temporal window):
   ```sql
-  ${when(incremental(), `WHERE extracted_date >= DATE_SUB(DATE('${execution_ts}'), INTERVAL 7 DAY)`)}
+  WHERE extracted_date BETWEEN DATE_SUB(DATE('${execution_ts}'), INTERVAL 7 DAY) AND DATE('${execution_ts}')
   ```
 - Partition generation timestamp:
   ```sql
@@ -57,7 +57,7 @@ Decoupling the execution timestamp (`execution_ts`) from dynamic BigQuery `MAX(e
 ### 3.1 Historical Asset (`definitions/clan_member_activity_historical.sqlx`)
 - **R1 (Materialization & Dataset)**: The asset MUST be configured with `type: "incremental"` and `schema: "coc_gold"`.
 - **R2 (Partitioning & Clustering)**: `partitionBy: "DATE(generated_at)"` (DAY partition on TIMESTAMP) and `clusterBy: ["ptag", "activity"]`.
-- **R3 (Temporal Idempotency)**: The system MUST derive `generated_at` and `extracted_date` filters deterministically from `DATE('${execution_ts}')` / `TIMESTAMP('${execution_ts}')`.
+- **R3 (Temporal Idempotency & Bounded Window)**: The system MUST derive `generated_at` and `extracted_date` filters deterministically from `DATE('${execution_ts}')` / `TIMESTAMP('${execution_ts}')`, enforcing an unconditional 7-day temporal boundary (`WHERE extracted_date BETWEEN DATE_SUB(DATE('${execution_ts}'), INTERVAL 7 DAY) AND DATE('${execution_ts}')`) across all 5 `SELECT` blocks without conditional `${when(incremental(), ...)}` wrappers.
 - **R4 (Dependency Graph)**: The system MUST reference source tables using `${ref("clan_member_upgrades")}`, `${ref("coc_member_hero_upgrades")}`, `${ref("coc_member_spells_upgrades")}`, `${ref("coc_member_troops_upgrades")}`, and `${ref("coc_member_heroEquips_upgrades")}`.
 
 ### 3.2 Hot Asset (`definitions/clan_member_activity_hot.sqlx`)
@@ -119,7 +119,7 @@ WITH unified_metrics AS (
     0 AS upgrade_troop,
     0 AS upgrade_heroEquip
   FROM ${ref("clan_member_upgrades")}
-  ${when(incremental(), `WHERE extracted_date >= DATE_SUB(DATE('${execution_ts}'), INTERVAL 7 DAY)`)}
+  WHERE extracted_date BETWEEN DATE_SUB(DATE('${execution_ts}'), INTERVAL 7 DAY) AND DATE('${execution_ts}')
 
   UNION ALL
 
@@ -128,7 +128,7 @@ WITH unified_metrics AS (
     CASE WHEN level_var > 0 THEN 1 ELSE 0 END, 
     0, 0, 0
   FROM ${ref("coc_member_hero_upgrades")}
-  ${when(incremental(), `WHERE extracted_date >= DATE_SUB(DATE('${execution_ts}'), INTERVAL 7 DAY)`)}
+  WHERE extracted_date BETWEEN DATE_SUB(DATE('${execution_ts}'), INTERVAL 7 DAY) AND DATE('${execution_ts}')
 
   UNION ALL
 
@@ -137,7 +137,7 @@ WITH unified_metrics AS (
     CASE WHEN level_var > 0 THEN 1 ELSE 0 END, 
     0, 0
   FROM ${ref("coc_member_spells_upgrades")}
-  ${when(incremental(), `WHERE extracted_date >= DATE_SUB(DATE('${execution_ts}'), INTERVAL 7 DAY)`)}
+  WHERE extracted_date BETWEEN DATE_SUB(DATE('${execution_ts}'), INTERVAL 7 DAY) AND DATE('${execution_ts}')
 
   UNION ALL
 
@@ -146,7 +146,7 @@ WITH unified_metrics AS (
     CASE WHEN level_var > 0 THEN 1 ELSE 0 END, 
     0
   FROM ${ref("coc_member_troops_upgrades")}
-  ${when(incremental(), `WHERE extracted_date >= DATE_SUB(DATE('${execution_ts}'), INTERVAL 7 DAY)`)}
+  WHERE extracted_date BETWEEN DATE_SUB(DATE('${execution_ts}'), INTERVAL 7 DAY) AND DATE('${execution_ts}')
 
   UNION ALL
 
@@ -154,7 +154,7 @@ WITH unified_metrics AS (
     ptag, 0, 0, 0, 0, 0, 0, 
     CASE WHEN level_var > 0 THEN 1 ELSE 0 END
   FROM ${ref("coc_member_heroEquips_upgrades")}
-  ${when(incremental(), `WHERE extracted_date >= DATE_SUB(DATE('${execution_ts}'), INTERVAL 7 DAY)`)}
+  WHERE extracted_date BETWEEN DATE_SUB(DATE('${execution_ts}'), INTERVAL 7 DAY) AND DATE('${execution_ts}')
 ),
 
 active_matrix AS (
