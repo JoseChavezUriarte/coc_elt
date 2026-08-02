@@ -1,0 +1,125 @@
+config {
+  type: "incremental",
+  schema: "coc_silver",
+  uniqueKey: ["extracted_date", "ptag"],
+  description: "Denormalized silver table tracking daily member stat progressions (war stars, capital contributions, town hall level) achieved by clan members.",
+  tags: ["silver", "daily", "upgrades"],
+  bigquery: {
+    partitionBy: "extracted_date",
+    clusterBy: ["ptag", "war_stars_var", "capital_contrib_var", "thl_var"],
+    labels: {
+      environment: "production",
+      domain: "clash-of-clans",
+      layer: "silver"
+    }
+  },
+  assertions: {
+    uniqueKey: ["extracted_date", "ptag"],
+    nonNull: ["extracted_date", "ptag", "war_stars_var", "capital_contrib_var", "thl_var"]
+  },
+  columns: {
+    extracted_date: "Partitioning date when the member stat upgrade/progression was recorded.",
+    prev_date: "Previous extraction date prior to the stat progression.",
+    ptag: "Unique identifier tag of the player.",
+    pname: "Player in-game display name.",
+    current_war_stars: "Total war stars after progression.",
+    prev_war_stars: "Total war stars prior to progression.",
+    war_stars_var: "War stars gained since previous extraction date.",
+    current_capital_contrib: "Total capital contributions after progression.",
+    prev_capital_contrib: "Total capital contributions prior to progression.",
+    capital_contrib_var: "Capital contributions gained since previous extraction date.",
+    current_thl: "Town hall level after progression.",
+    prev_thl: "Town hall level prior to progression.",
+    thl_var: "Town hall levels gained since previous extraction date."
+  }
+}
+
+${when(incremental(), `
+WITH target_anchor AS (
+  SELECT COALESCE(MAX(extracted_date), DATE('1970-01-01')) AS max_target_date
+  FROM ${self()}
+),
+
+member_history AS (
+  SELECT
+    extracted_date,
+    LAG(extracted_date, 1) OVER w_member AS prev_date,
+    ptag,
+    pname,
+    war_stars AS current_war_stars,
+    LAG(war_stars, 1) OVER w_member AS prev_war_stars,
+    war_stars - LAG(war_stars, 1) OVER w_member AS war_stars_var,
+    capital_contrib AS current_capital_contrib,
+    LAG(capital_contrib, 1) OVER w_member AS prev_capital_contrib,
+    capital_contrib - LAG(capital_contrib, 1) OVER w_member AS capital_contrib_var,
+    thl AS current_thl,
+    LAG(thl, 1) OVER w_member AS prev_thl,
+    thl - LAG(thl, 1) OVER w_member AS thl_var
+  FROM 
+    ${ref("clan_members")}
+  WHERE 
+    extracted_date >= DATE_SUB((SELECT max_target_date FROM target_anchor), INTERVAL 7 DAY)
+  WINDOW w_member AS (PARTITION BY ptag ORDER BY extracted_date ASC)
+)
+
+SELECT 
+  extracted_date,
+  prev_date,
+  ptag,
+  pname,
+  current_war_stars,
+  prev_war_stars,
+  war_stars_var,
+  current_capital_contrib,
+  prev_capital_contrib,
+  capital_contrib_var,
+  current_thl,
+  prev_thl,
+  thl_var
+FROM 
+  member_history
+WHERE 
+  (war_stars_var > 0 OR capital_contrib_var > 0 OR thl_var > 0)
+  AND extracted_date > (SELECT max_target_date FROM target_anchor)
+`)}
+
+${when(!incremental(), `
+WITH member_history AS (
+  SELECT
+    extracted_date,
+    LAG(extracted_date, 1) OVER w_member AS prev_date,
+    ptag,
+    pname,
+    war_stars AS current_war_stars,
+    LAG(war_stars, 1) OVER w_member AS prev_war_stars,
+    war_stars - LAG(war_stars, 1) OVER w_member AS war_stars_var,
+    capital_contrib AS current_capital_contrib,
+    LAG(capital_contrib, 1) OVER w_member AS prev_capital_contrib,
+    capital_contrib - LAG(capital_contrib, 1) OVER w_member AS capital_contrib_var,
+    thl AS current_thl,
+    LAG(thl, 1) OVER w_member AS prev_thl,
+    thl - LAG(thl, 1) OVER w_member AS thl_var
+  FROM 
+    ${ref("clan_members")}
+  WINDOW w_member AS (PARTITION BY ptag ORDER BY extracted_date ASC)
+)
+
+SELECT 
+  extracted_date,
+  prev_date,
+  ptag,
+  pname,
+  current_war_stars,
+  prev_war_stars,
+  war_stars_var,
+  current_capital_contrib,
+  prev_capital_contrib,
+  capital_contrib_var,
+  current_thl,
+  prev_thl,
+  thl_var
+FROM 
+  member_history
+WHERE 
+  (war_stars_var > 0 OR capital_contrib_var > 0 OR thl_var > 0)
+`)}
