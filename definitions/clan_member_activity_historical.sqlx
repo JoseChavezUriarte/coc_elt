@@ -1,0 +1,113 @@
+config {
+  type: "incremental",
+  schema: "coc_gold",
+  uniqueKey: ["generated_at", "ptag"],
+  description: "Historical daily partition snapshot tracking member activity scores calculated across all upgrade dimensions.",
+  tags: ["gold", "daily", "activity"],
+  bigquery: {
+    partitionBy: "DATE(generated_at)",
+    clusterBy: ["ptag", "activity"],
+    labels: {
+      environment: "production",
+      domain: "clash-of-clans",
+      layer: "gold"
+    }
+  },
+  assertions: {
+    uniqueKey: ["generated_at", "ptag"],
+    nonNull: ["generated_at", "ptag", "activity"]
+  },
+  columns: {
+    generated_at: "Deterministic execution timestamp when this snapshot partition was generated.",
+    ptag: "Unique player tag identifier.",
+    wars_active: "Indicator (1/0) if player participated in war stars progression.",
+    capital_active: "Indicator (1/0) if player contributed to clan capital.",
+    th_active: "Indicator (1/0) if player upgraded town hall.",
+    upgrade_hero: "Indicator (1/0) if player upgraded any hero.",
+    upgrade_spell: "Indicator (1/0) if player upgraded any spell.",
+    upgrade_troop: "Indicator (1/0) if player upgraded any troop.",
+    upgrade_heroEquip: "Indicator (1/0) if player upgraded any hero equipment.",
+    activity: "Aggregated activity score (sum of all 7 activity indicators, range 0-7)."
+  }
+}
+
+js {
+  const execution_ts = dataform.projectConfig.vars.execution_timestamp || "2026-08-02T12:00:00Z";
+}
+
+WITH unified_metrics AS (
+  SELECT 
+    ptag,
+    CASE WHEN war_stars_var > 0 THEN 1 ELSE 0 END AS wars_active,
+    CASE WHEN capital_contrib_var > 0 THEN 1 ELSE 0 END AS capital_active,
+    CASE WHEN thl_var > 0 THEN 1 ELSE 0 END AS th_active,
+    0 AS upgrade_hero,
+    0 AS upgrade_spell,
+    0 AS upgrade_troop,
+    0 AS upgrade_heroEquip
+  FROM ${ref("clan_member_upgrades")}
+  ${when(incremental(), `WHERE extracted_date >= DATE_SUB(DATE('${execution_ts}'), INTERVAL 7 DAY)`)}
+
+  UNION ALL
+
+  SELECT 
+    ptag, 0, 0, 0, 
+    CASE WHEN level_var > 0 THEN 1 ELSE 0 END, 
+    0, 0, 0
+  FROM ${ref("coc_member_hero_upgrades")}
+  ${when(incremental(), `WHERE extracted_date >= DATE_SUB(DATE('${execution_ts}'), INTERVAL 7 DAY)`)}
+
+  UNION ALL
+
+  SELECT 
+    ptag, 0, 0, 0, 0, 
+    CASE WHEN level_var > 0 THEN 1 ELSE 0 END, 
+    0, 0
+  FROM ${ref("coc_member_spells_upgrades")}
+  ${when(incremental(), `WHERE extracted_date >= DATE_SUB(DATE('${execution_ts}'), INTERVAL 7 DAY)`)}
+
+  UNION ALL
+
+  SELECT 
+    ptag, 0, 0, 0, 0, 0, 
+    CASE WHEN level_var > 0 THEN 1 ELSE 0 END, 
+    0
+  FROM ${ref("coc_member_troops_upgrades")}
+  ${when(incremental(), `WHERE extracted_date >= DATE_SUB(DATE('${execution_ts}'), INTERVAL 7 DAY)`)}
+
+  UNION ALL
+
+  SELECT 
+    ptag, 0, 0, 0, 0, 0, 0, 
+    CASE WHEN level_var > 0 THEN 1 ELSE 0 END
+  FROM ${ref("coc_member_heroEquips_upgrades")}
+  ${when(incremental(), `WHERE extracted_date >= DATE_SUB(DATE('${execution_ts}'), INTERVAL 7 DAY)`)}
+),
+
+active_matrix AS (
+  SELECT 
+    TIMESTAMP('${execution_ts}') AS generated_at,
+    ptag,
+    MAX(wars_active) AS wars_active,
+    MAX(capital_active) AS capital_active,
+    MAX(th_active) AS th_active,
+    MAX(upgrade_hero) AS upgrade_hero,
+    MAX(upgrade_spell) AS upgrade_spell,
+    MAX(upgrade_troop) AS upgrade_troop,
+    MAX(upgrade_heroEquip) AS upgrade_heroEquip
+  FROM unified_metrics
+  GROUP BY ptag
+)
+
+SELECT
+  generated_at,
+  ptag,
+  wars_active,
+  capital_active,
+  th_active,
+  upgrade_hero,
+  upgrade_spell,
+  upgrade_troop,
+  upgrade_heroEquip,
+  (wars_active + capital_active + th_active + upgrade_hero + upgrade_spell + upgrade_troop + upgrade_heroEquip) AS activity
+FROM active_matrix

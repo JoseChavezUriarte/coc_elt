@@ -1,0 +1,49 @@
+config {
+  type: "table",
+  schema: "coc_gold",
+  description: "Hot asset serving current active member snapshot by querying latest partition of clan_member_activity_historical using literal execution timestamp.",
+  tags: ["gold", "daily", "activity", "hot"],
+  bigquery: {
+    labels: {
+      environment: "production",
+      domain: "clash-of-clans",
+      layer: "gold"
+    }
+  },
+  assertions: {
+    uniqueKey: ["ptag"],
+    nonNull: ["generated_at", "ptag", "activity"]
+  },
+  columns: {
+    generated_at: "Snapshot generation timestamp of the current active partition.",
+    ptag: "Unique player tag identifier.",
+    wars_active: "Indicator (1/0) if player participated in war stars progression.",
+    capital_active: "Indicator (1/0) if player contributed to clan capital.",
+    th_active: "Indicator (1/0) if player upgraded town hall.",
+    upgrade_hero: "Indicator (1/0) if player upgraded any hero.",
+    upgrade_spell: "Indicator (1/0) if player upgraded any spell.",
+    upgrade_troop: "Indicator (1/0) if player upgraded any troop.",
+    upgrade_heroEquip: "Indicator (1/0) if player upgraded any hero equipment.",
+    activity: "Aggregated activity score (0-7)."
+  }
+}
+
+js {
+  const execution_ts = dataform.projectConfig.vars.execution_timestamp || "2026-08-02T12:00:00Z";
+}
+
+SELECT
+  generated_at,
+  ptag,
+  wars_active,
+  capital_active,
+  th_active,
+  upgrade_hero,
+  upgrade_spell,
+  upgrade_troop,
+  upgrade_heroEquip,
+  activity
+FROM
+  ${ref("clan_member_activity_historical")}
+WHERE
+  generated_at = TIMESTAMP('${execution_ts}')
