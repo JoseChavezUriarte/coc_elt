@@ -1,0 +1,95 @@
+config {
+  type: "incremental",
+  schema: "coc_silver",
+  uniqueKey: ["extracted_date", "ptag", "spell_name"],
+  description: "Denormalized silver table tracking daily spell level upgrades achieved by clan members.",
+  tags: ["silver", "daily", "upgrades"],
+  bigquery: {
+    partitionBy: "extracted_date",
+    clusterBy: ["ptag", "spell_name"],
+    labels: {
+      environment: "production",
+      domain: "clash-of-clans",
+      layer: "silver"
+    }
+  },
+  assertions: {
+    uniqueKey: ["extracted_date", "ptag", "spell_name"],
+    nonNull: ["extracted_date", "ptag", "spell_name", "current_level", "prev_level"]
+  },
+  columns: {
+    extracted_date: "Partitioning date when the spell upgrade was recorded.",
+    prev_date: "Previous extraction date prior to the upgrade.",
+    ptag: "Unique identifier tag of the player.",
+    spell_name: "Name of the spell (e.g. Lightning Spell, Healing Spell).",
+    current_level: "Spell level achieved after the upgrade.",
+    prev_level: "Spell level prior to the upgrade.",
+    level_var: "Number of levels gained in this upgrade."
+  }
+}
+
+${when(incremental(), `
+WITH target_anchor AS (
+  SELECT COALESCE(MAX(extracted_date), DATE('1970-01-01')) AS max_target_date
+  FROM ${self()}
+),
+
+spells_history AS (
+  SELECT
+    extracted_date,
+    ptag,
+    spell_name,
+    spell_level AS current_level,
+    LAG(extracted_date, 1) OVER w_equip AS prev_date,
+    LAG(spell_level, 1) OVER w_equip AS prev_level,
+    spell_level - LAG(spell_level, 1) OVER w_equip AS level_var
+  FROM 
+    ${ref("coc_member_spells")}
+  WHERE 
+    extracted_date >= DATE_SUB((SELECT max_target_date FROM target_anchor), INTERVAL 7 DAY)
+  WINDOW w_equip AS (PARTITION BY ptag, spell_name ORDER BY extracted_date ASC)
+)
+
+SELECT 
+  extracted_date,
+  prev_date,
+  ptag,
+  spell_name,
+  current_level,
+  prev_level,
+  level_var
+FROM 
+  spells_history
+WHERE 
+  level_var > 0
+  AND extracted_date > (SELECT max_target_date FROM target_anchor)
+`)}
+
+${when(!incremental(), `
+WITH spells_history AS (
+  SELECT
+    extracted_date,
+    ptag,
+    spell_name,
+    spell_level AS current_level,
+    LAG(extracted_date, 1) OVER w_equip AS prev_date,
+    LAG(spell_level, 1) OVER w_equip AS prev_level,
+    spell_level - LAG(spell_level, 1) OVER w_equip AS level_var
+  FROM 
+    ${ref("coc_member_spells")}
+  WINDOW w_equip AS (PARTITION BY ptag, spell_name ORDER BY extracted_date ASC)
+)
+
+SELECT 
+  extracted_date,
+  prev_date,
+  ptag,
+  spell_name,
+  current_level,
+  prev_level,
+  level_var
+FROM 
+  spells_history
+WHERE 
+  level_var > 0
+`)}
