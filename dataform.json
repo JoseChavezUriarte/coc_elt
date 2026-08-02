@@ -2,6 +2,6 @@
   "warehouse": "bigquery",
   "defaultSchema": "coc_silver",
   "assertionSchema": "coc_assertions",
-  "defaultDatabase": "coc-data-analytics-project",
+  "defaultDatabase": "swift-capsule-492817-a7",
   "defaultLocation": "us-central1"
 }

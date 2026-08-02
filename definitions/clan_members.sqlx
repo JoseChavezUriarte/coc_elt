@@ -25,6 +25,9 @@ config {
     role: "Role of the member in the clan (e.g. leader, coLeader, admin, member).",
     exp_level: "Player experience level.",
     trophies: "Current trophy count in the main village.",
+    defense_wins: "Number of defense wins in the current season.",
+    donations: "Troops donated by the member in the current season.",
+    donations_received: "Troops received by the member in the current season.",
     war_stars: "Total war stars earned by the player.",
     thl: "Town hall level.",
     bhl: "Builder hall level.",
@@ -42,6 +45,9 @@ WITH parsed_members AS (
     JSON_VALUE(payload.role) AS role,
     SAFE_CAST(JSON_VALUE(payload.expLevel) AS INT64) AS exp_level,
     SAFE_CAST(JSON_VALUE(payload.trophies) AS INT64) AS trophies,
+    SAFE_CAST(JSON_VALUE(payload.defenseWins) AS INT64) AS defense_wins,
+    SAFE_CAST(JSON_VALUE(payload.donations) AS INT64) AS donations,
+    SAFE_CAST(JSON_VALUE(payload.donationsReceived) AS INT64) AS donations_received,
     SAFE_CAST(JSON_VALUE(payload.warStars) AS INT64) AS war_stars,
     SAFE_CAST(JSON_VALUE(payload.townHallLevel) AS INT64) AS thl,
     SAFE_CAST(JSON_VALUE(payload.builderHallLevel) AS INT64) AS bhl,
@@ -70,6 +76,9 @@ SELECT
   role,
   exp_level,
   trophies,
+  defense_wins,
+  donations,
+  donations_received,
   war_stars,
   thl,
   bhl,
@@ -79,4 +88,5 @@ FROM
   ranked_members
 WHERE
   row_num = 1
+
 

@@ -348,3 +348,7 @@ dist
 
 # Scratch directory
 scratch/
+
+# Dataform credentials
+.df-credentials.json
+

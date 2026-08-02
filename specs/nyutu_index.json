@@ -182,6 +182,14 @@
   "30f1bae4-5ed2-4464-94d4-de6ee33e372d": {
     "title": "Create clan_description Table in coc_silver Walkthrough",
     "source": "specs/coc-elt_20260721_create-clan-description-table_walkthrough.md"
+  },
+  "b133af9e-9a42-4bcd-a97a-e59447e3adc6": {
+    "title": "Create coc_member_hero_upgrades Table in coc_silver Walkthrough",
+    "source": "specs/coc-elt_20260802_create-coc-member-hero-upgrades-table_walkthrough.md"
+  },
+  "96c26575-44c2-477e-a7bd-3951d6deacd1": {
+    "title": "Create coc_member_hero_upgrades Incremental Silver Table",
+    "source": "specs/coc-elt_20260802_create-coc-member-hero-upgrades-table_walkthrough.md"
   }
 }
 

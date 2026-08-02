@@ -1,0 +1,95 @@
+config {
+  type: "incremental",
+  schema: "coc_silver",
+  uniqueKey: ["extracted_date", "ptag", "hero_name"],
+  description: "Denormalized silver table tracking daily hero level upgrades achieved by clan members.",
+  tags: ["silver", "daily", "upgrades"],
+  bigquery: {
+    partitionBy: "extracted_date",
+    clusterBy: ["ptag", "hero_name"],
+    labels: {
+      environment: "production",
+      domain: "clash-of-clans",
+      layer: "silver"
+    }
+  },
+  assertions: {
+    uniqueKey: ["extracted_date", "ptag", "hero_name"],
+    nonNull: ["extracted_date", "ptag", "hero_name", "current_level", "prev_level"]
+  },
+  columns: {
+    extracted_date: "Partitioning date when the hero upgrade was recorded.",
+    prev_date: "Previous extraction date prior to the upgrade.",
+    ptag: "Unique identifier tag of the player.",
+    hero_name: "Name of the hero (e.g. Barbarian King, Archer Queen).",
+    current_level: "Hero level achieved after the upgrade.",
+    prev_level: "Hero level prior to the upgrade.",
+    level_var: "Number of levels gained in this upgrade."
+  }
+}
+
+${when(incremental(), `
+WITH target_anchor AS (
+  SELECT COALESCE(MAX(extracted_date), DATE('1970-01-01')) AS max_target_date
+  FROM ${self()}
+),
+
+hero_history AS (
+  SELECT
+    extracted_date,
+    ptag,
+    hero_name,
+    hero_level AS current_level,
+    LAG(extracted_date, 1) OVER w_equip AS prev_date,
+    LAG(hero_level, 1) OVER w_equip AS prev_level,
+    hero_level - LAG(hero_level, 1) OVER w_equip AS level_var
+  FROM 
+    ${ref("coc_member_hero")}
+  WHERE 
+    extracted_date >= DATE_SUB((SELECT max_target_date FROM target_anchor), INTERVAL 7 DAY)
+  WINDOW w_equip AS (PARTITION BY ptag, hero_name ORDER BY extracted_date ASC)
+)
+
+SELECT 
+  extracted_date,
+  prev_date,
+  ptag,
+  hero_name,
+  current_level,
+  prev_level,
+  level_var
+FROM 
+  hero_history
+WHERE 
+  level_var > 0
+  AND extracted_date > (SELECT max_target_date FROM target_anchor)
+`)}
+
+${when(!incremental(), `
+WITH hero_history AS (
+  SELECT
+    extracted_date,
+    ptag,
+    hero_name,
+    hero_level AS current_level,
+    LAG(extracted_date, 1) OVER w_equip AS prev_date,
+    LAG(hero_level, 1) OVER w_equip AS prev_level,
+    hero_level - LAG(hero_level, 1) OVER w_equip AS level_var
+  FROM 
+    ${ref("coc_member_hero")}
+  WINDOW w_equip AS (PARTITION BY ptag, hero_name ORDER BY extracted_date ASC)
+)
+
+SELECT 
+  extracted_date,
+  prev_date,
+  ptag,
+  hero_name,
+  current_level,
+  prev_level,
+  level_var
+FROM 
+  hero_history
+WHERE 
+  level_var > 0
+`)}
