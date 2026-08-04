@@ -24,6 +24,15 @@ main:
         switch:
           - condition: $${"error" in op_status}
             raise: $${op_status.error}
+        next: get_max_date_from_bq
+    - get_max_date_from_bq:
+        call: googleapis.bigquery.v2.jobs.query
+        args:
+          projectId: "${data_project_id}"
+          body:
+            query: "SELECT FORMAT_TIMESTAMP('%Y-%m-%dT%H:%M:%SZ', MAX(extracted_date)) AS max_date FROM swift-capsule-492817-a7.coc_silver.clan_member_upgrades"
+            useLegacySql: false
+        result: bq_result
         next: compile_dataform
     - compile_dataform:
         call: http.post
@@ -35,6 +44,8 @@ main:
             gitCommitish: "main"
             codeCompilationConfig:
               defaultDatabase: "${data_project_id}"
+              vars:
+                execution_timestamp: $${bq_result.rows[0].f[0].v}
         result: compilation
     - run_dataform:
         call: http.post
