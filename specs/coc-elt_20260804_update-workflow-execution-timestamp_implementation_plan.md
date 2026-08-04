@@ -63,7 +63,7 @@ source_uri: "specs/coc-elt_20260804_update-workflow-execution-timestamp_implemen
         args:
           projectId: "${data_project_id}"
           body:
-            query: $${"SELECT FORMAT_TIMESTAMP('%Y-%m-%dT%H:%M:%SZ', MAX(extracted_date)) AS max_date FROM `" + data_project_id + ".coc_silver.clan_member_upgrades`"}
+            query: "SELECT FORMAT_TIMESTAMP('%Y-%m-%dT%H:%M:%SZ', MAX(extracted_date)) AS max_date FROM `${data_project_id}.coc_silver.clan_member_upgrades`"
             useLegacySql: false
         result: bq_result
         next: validate_bq_result
