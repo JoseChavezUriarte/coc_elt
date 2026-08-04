@@ -40,6 +40,14 @@ resource "google_project_iam_member" "bq_job_user" {
   depends_on = [google_project_service.compute_services]
 }
 
+resource "google_project_iam_member" "bq_data_viewer" {
+  project = var.data_project_id
+  role    = "roles/bigquery.dataViewer"
+  member  = "serviceAccount:${google_service_account.elt_runner.email}"
+
+  depends_on = [google_project_service.compute_services]
+}
+
 resource "google_bigquery_dataset_iam_member" "bq_data_editor" {
   project    = var.data_project_id
   dataset_id = google_bigquery_dataset.bronze.dataset_id
