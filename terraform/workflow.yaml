@@ -30,9 +30,14 @@ main:
         args:
           projectId: "${data_project_id}"
           body:
-            query: "SELECT FORMAT_TIMESTAMP('%Y-%m-%dT%H:%M:%SZ', MAX(extracted_date)) AS max_date FROM swift-capsule-492817-a7.coc_silver.clan_member_upgrades"
+            query: $${"SELECT FORMAT_TIMESTAMP('%Y-%m-%dT%H:%M:%SZ', MAX(extracted_date)) AS max_date FROM `" + data_project_id + ".coc_silver.clan_member_upgrades`"}
             useLegacySql: false
         result: bq_result
+        next: validate_bq_result
+    - validate_bq_result:
+        switch:
+          - condition: $${not("rows" in bq_result) or len(bq_result.rows) == 0 or bq_result.rows[0].f[0].v == null}
+            raise: "Operational Error: The clan_member_upgrades table is empty or the MAX() value is null."
         next: compile_dataform
     - compile_dataform:
         call: http.post
